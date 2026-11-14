@@ -4,9 +4,10 @@ import Link from "next/link";
 import type { Profile } from "@/lib/profile";
 import JoinForm from "@/components/join-form";
 
-type RoomData = { room: { id: string; name: string; phase: string }; profiles: Profile[]; myProfileId: string | null;
-  isHost: boolean; questions: { id: string; text: string }[]; source: "openai" | "basic" | null; generatedAt?: string | null };
-type LeaderData = { inviteUrl: string; count: number; names: string[] };
+type TeamProfile = Profile & { isHost?: boolean };
+type RoomData = { room: { id: string; name: string; phase: string }; profiles: TeamProfile[]; myProfileId: string | null;
+  isHost: boolean; myDomains?: string[]; questions: { id: string; text: string }[]; source: "openai" | "basic" | null; generatedAt?: string | null };
+type LeaderData = { count: number; names: string[] };
 
 const characters: Record<string, string> = { 개발: "developer", 디자인: "designer", 기획: "planner", 마케팅: "marketer", "대표·창업자": "ceo" };
 function relativeTime(value: string) {
@@ -26,7 +27,7 @@ export default function RoomView({ id }: { id: string }) {
   const [hostJustEntered, setHostJustEntered] = useState(false);
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [leader, setLeader] = useState<LeaderData | null>(null);
-  const [copyMessage, setCopyMessage] = useState("");
+  const [filters, setFilters] = useState<string[]>([]);
   const load = useCallback(async () => {
     try {
       const response = await fetch("/api/rooms/" + id, { cache: "no-store" });
@@ -85,18 +86,19 @@ export default function RoomView({ id }: { id: string }) {
     } catch (e) { setError(e instanceof Error ? e.message : "다시 시도해 주세요."); }
     finally { setBusy(false); }
   }
-  async function copyInvite() {
-    if (!leader?.inviteUrl) return;
-    try { await navigator.clipboard.writeText(leader.inviteUrl); setCopyMessage("초대 링크를 복사했어요."); }
-    catch { setCopyMessage("복사하지 못했어요. 다시 시도해 주세요."); }
-    window.setTimeout(() => setCopyMessage(""), 3000);
-  }
-  if (!data) return <main className="container"><p role="status">{error || "조 정보를 불러오고 있어요..."}</p><Link href="/event">조 목록으로</Link></main>;
+  if (!data) return <main className="container"><p role="status">{error || "조 정보를 불러오고 있어요..."}</p><Link href="/">조 목록으로</Link></main>;
   const { room, profiles, questions, myProfileId, isHost } = data;
+  const myDomains = data.myDomains || [];
+  const sharedCount = (profile: TeamProfile) => profile.domains.filter((domain) => myDomains.includes(domain)).length;
+  const domains = Array.from(new Set(profiles.flatMap((profile) => profile.domains)));
+  const sharedPeople = profiles.filter((profile) => profile.id !== myProfileId && sharedCount(profile) > 0).length;
+  const shownProfiles = profiles.map((profile, index) => ({ profile, index }))
+    .filter(({ profile }) => filters.length === 0 || filters.some((domain) => profile.domains.some((item) => item === domain)))
+    .sort((a, b) => sharedCount(b.profile) - sharedCount(a.profile) || a.index - b.index);
   return <main className="container">
-    <div className="tag" style={{ position: "sticky", top: 0, zIndex: 1, display: "block", width: "fit-content" }}>{isHost ? "팀장 화면" : "팀원 화면"} · {room.name}</div>
+    <div className={`role-tag ${isHost ? "role-host" : "role-member"}`}>{isHost ? "팀장 화면" : "팀원 화면"} · {room.name}</div>
     {hostJustEntered && isHost && <p role="status">{room.name} 팀장으로 접속했어요.</p>}
-    <Link href="/event" className="status">← 전체 조 보기</Link>
+    <Link href="/" className="status">← 전체 조 보기</Link>
     <div className="eyebrow" style={{ marginTop: 18 }}>우리 조</div>
     <h1>{room.name}</h1>
     {(isHost || questions.length > 0) && <section className="panel"><div className="eyebrow">TODAY'S TOPICS</div><h2>우리의 공통 대화 주제</h2>
@@ -109,19 +111,20 @@ export default function RoomView({ id }: { id: string }) {
       {error && <p className="error" role="alert">{error}</p>}
     </section>}
     {isHost && <section className="panel"><h2>팀장 관리</h2>
-      {leader && <><p className="muted">{leader.count}명 등록{leader.names?.length ? " · " + leader.names.join(", ") : ""}</p>
-        <button className="secondary" disabled={!leader.inviteUrl} onClick={copyInvite}>초대 링크 복사</button></>}
-      {copyMessage && <p className="status" role="status">{copyMessage}</p>}
+      {leader && <p className="muted">{leader.count}명 등록{leader.names?.length ? " · " + leader.names.join(", ") : ""}</p>}
     </section>}
-    <section className="panel"><div className="inline" style={{ justifyContent: "space-between" }}><div><div className="eyebrow">MEET THE TEAM</div><h2>함께 모인 사람들 <span className="muted">{profiles.length}</span></h2></div>
-      {!myProfileId && (isHost ? <button className="secondary" onClick={() => setShowProfileForm(!showProfileForm)}>내 프로필 등록</button> : <Link className="button secondary" href="/event/join">내 프로필 작성</Link>)}</div>
+    <section className="panel"><div className="inline" style={{ justifyContent: "space-between" }}><div><div className="eyebrow">말랑</div><h2>등록한 사람 <span className="muted">{profiles.length}</span></h2></div>
+      {!myProfileId && (isHost ? <button className="secondary" onClick={() => setShowProfileForm(!showProfileForm)}>내 프로필 등록</button> : <Link className="button secondary" href={`/room/${id}/join`}>내 프로필 작성</Link>)}</div>
       {isHost && !myProfileId && showProfileForm && <JoinForm id={id} onComplete={() => { setShowProfileForm(false); void load(); }} />}
-      {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : <div className="profiles">{profiles.map((profile) => <article className="profile person-card" key={profile.id}>
+      <p className="status">나와 관심 분야가 같은 사람 {sharedPeople}명</p>
+      {domains.length > 0 && <div className="chips v3-filters" aria-label="관심 분야 필터"><button type="button" className={`filter-chip ${filters.length === 0 ? "selected" : ""}`} aria-pressed={filters.length === 0} onClick={() => setFilters([])}>전체</button>
+        {domains.map((domain) => <button type="button" key={domain} className={`filter-chip ${filters.includes(domain) ? "selected" : ""}`} aria-pressed={filters.includes(domain)} onClick={() => setFilters((current) => current.includes(domain) ? current.filter((item) => item !== domain) : [...current, domain])}>{domain}</button>)}</div>}
+      {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : shownProfiles.length === 0 ? <p className="muted">선택한 분야의 팀원이 없어요.</p> : <div className="profiles">{shownProfiles.map(({ profile }) => <article className="profile person-card" key={profile.id}>
         <div className="character-avatar" aria-hidden="true">{characters[profile.occupation] ? <img src={`/characters/${characters[profile.occupation]}.png`} alt="" /> : <span>{profile.occupation.slice(0, 1)}</span>}</div>
         <div className="person-details">
-        <h3>{profile.name} {profile.id === myProfileId && <span className="tag">나</span>}</h3>
+        <h3>{profile.name} <span className={`role-tag ${profile.isHost ? "role-host" : "role-member"}`}>{profile.isHost ? "팀장" : "팀원"}</span> {profile.id === myProfileId && <span className="tag">나</span>}</h3>
         <div className="status">{profile.occupation} · {profile.experience}</div><p>{profile.introduction}</p>
-        <div>{profile.domains.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
+        <div>{profile.domains.map((tag) => <span className={`tag ${myDomains.includes(tag) && profile.id !== myProfileId ? "shared-domain" : ""}`} key={tag}>{tag}</span>)}</div>
         {profile.socialUrl && <p><a href={profile.socialUrl} target="_blank" rel="noopener noreferrer">SNS 보기 ↗</a></p>}
         </div>
       </article>)}</div>}

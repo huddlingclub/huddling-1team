@@ -111,3 +111,36 @@ input:not([type=checkbox]), select, textarea { border-radius: 14px; }
 .admin-profiles th, .admin-profiles td { padding: 8px; }
 .admin-detail p { margin: 0; }
 .admin-toast { padding: 10px 14px; border-radius: 8px; background: #edf3ff; font-size: 14px; }
+
+/* v3 화면 구조 */
+.brand-banner { display: block; width: 100%; height: auto; }
+.v3-team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.v3-team-card { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-height: 150px; padding: 20px; border-radius: 28px; color: var(--ink); }
+.v3-team-card strong { font-size: 32px; }
+.v3-team-card .team-status { margin-top: auto; }
+.team-color-0 { background: var(--color-accent-butter, var(--line)); }
+.team-color-1 { background: var(--color-accent-lilac, var(--line)); }
+.team-color-2 { background: var(--color-accent-blush, var(--line)); }
+.team-color-3 { background: var(--color-accent-periwinkle, var(--line)); }
+.team-color-4 { background: var(--color-accent-peach, var(--line)); }
+.team-status { padding: 4px 10px; border: 1px solid var(--paper); border-radius: 999px; font-size: 12px; }
+.team-status.has-host { background: var(--paper); }
+.v3-team-summary { margin: 30px 0 48px; padding: 24px; border-radius: 28px; }
+.v3-team-summary h1 { margin: 0 0 8px; }
+.v3-start h2 { margin-bottom: 20px; }
+.v3-full { display: flex; width: 100%; margin: 12px 0; }
+.v3-center, .v3-done { text-align: center; }
+.v3-done-avatar { width: 140px; height: 140px; margin: 48px auto 20px; }
+.v3-done .person-card { text-align: left; margin: 20px 0 48px; }
+.role-tag { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.role-host { background: var(--color-primary, var(--line)); color: var(--color-on-primary, var(--ink)); }
+.role-member { background: var(--color-surface-muted, var(--line)); color: var(--muted); }
+.v3-role-preview { display: flex; align-items: center; gap: 16px; margin: 20px 0; }
+.v3-role-preview p { margin: 0; }
+.v3-filters { margin: 16px 0; }
+.filter-chip { min-height: 0; padding: 6px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-size: 13px; }
+.filter-chip.selected, .chip:has(input:checked) { background: var(--color-inverse, var(--ink)); color: var(--color-on-inverse, var(--paper)); }
+.chip input { position: absolute; opacity: 0; }
+.chip:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 3px; }
+.chip:has(input:checked) span::before { content: '✓ '; }
+.shared-domain { background: var(--color-primary, var(--line)); color: var(--ink); }

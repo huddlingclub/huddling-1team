@@ -1,21 +1,26 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { Profile } from "@/lib/profile";
 
+const characters: Record<string, string> = { 개발: "developer", 디자인: "designer", 기획: "planner", 마케팅: "marketer", "대표·창업자": "ceo" };
 export default function DoneView({ id }: { id: string }) {
-  const [count, setCount] = useState<number | null>(null);
+  const [room, setRoom] = useState("");
+  const [profile, setProfile] = useState<Profile | null>(null);
   useEffect(() => {
     void fetch("/api/rooms/" + id, { cache: "no-store" }).then(async (response) => {
       if (!response.ok) return;
       const data = await response.json();
-      const n = typeof data.profileCount === "number" ? data.profileCount : Array.isArray(data.profiles) ? data.profiles.length : null;
-      setCount(n);
+      setRoom(data.room?.name || "");
+      setProfile(Array.isArray(data.profiles) ? data.profiles.find((item: Profile) => item.id === data.myProfileId) || null : null);
     }).catch(() => {});
   }, [id]);
-  return <main className="container narrow"><div className="panel done-card">
-    <div className="eyebrow">WELCOME TO HUDDLING</div>
-    <h1>카드가 등록됐어요!</h1>
-    {count !== null && <p className="muted">{count}명이 카드를 등록했어요</p>}
-    <Link href="/event" className="button">전체 조 카드 보기 →</Link>
-  </div></main>;
+  return <main className="container narrow v3-done">
+    {profile && <div className="character-avatar v3-done-avatar" aria-hidden="true">{characters[profile.occupation] ? <img src={`/characters/${characters[profile.occupation]}.png`} alt="" /> : <span>{profile.occupation.slice(0, 1)}</span>}</div>}
+    <h1>{room ? `${room}에 합류했어요!` : "카드가 등록됐어요!"}</h1>
+    <p className="muted">조 페이지에서 팀원 프로필과<br />공통 주제를 볼 수 있어요.</p>
+    {profile && <article className="profile person-card"><div className="character-avatar" aria-hidden="true">{characters[profile.occupation] ? <img src={`/characters/${characters[profile.occupation]}.png`} alt="" /> : <span>{profile.occupation.slice(0, 1)}</span>}</div>
+      <div className="person-details"><h3>{profile.name} <span className="tag">나</span></h3><div className="status">{profile.occupation} · {profile.experience}</div><p>{profile.introduction}</p><div>{profile.domains.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div></div></article>}
+    <Link href={`/room/${id}`} className="button v3-full">{room ? `${room} 페이지로 가기` : "조 페이지로 가기"}</Link>
+  </main>;
 }
