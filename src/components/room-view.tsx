@@ -10,6 +10,7 @@ export default function RoomView({ id }: { id: string }) {
   const [data, setData] = useState<RoomData | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [hostJustEntered, setHostJustEntered] = useState(false);
   const load = useCallback(async () => {
     try {
       const response = await fetch("/api/rooms/" + id, { cache: "no-store" });
@@ -30,6 +31,7 @@ export default function RoomView({ id }: { id: string }) {
           const response = await fetch("/api/rooms/" + id + "/host", { method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token, eventToken: params.get("event") }) });
           if (!response.ok) { setError("유효하지 않은 팀장 링크예요."); return; }
+          setHostJustEntered(true);
         }
       }
       await load();
@@ -51,6 +53,8 @@ export default function RoomView({ id }: { id: string }) {
   if (!data) return <main className="container"><p role="status">{error || "조 정보를 불러오고 있어요..."}</p><Link href="/event">조 목록으로</Link></main>;
   const { room, profiles, questions, myProfileId, isHost } = data;
   return <main className="container">
+    <div className="tag" style={{ position: "sticky", top: 0, zIndex: 1, display: "block", width: "fit-content" }}>{isHost ? "팀장 화면" : "팀원 화면"} · {room.name}</div>
+    {hostJustEntered && isHost && <p role="status">{room.name} 팀장으로 접속했어요.</p>}
     <Link href="/event" className="status">← 전체 조 보기</Link>
     <div className="eyebrow" style={{ marginTop: 18 }}>우리 조</div>
     <h1>{room.name}</h1>
