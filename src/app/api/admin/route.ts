@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     if (typeof body.roomId !== "string" || !isUuid(body.roomId)) return NextResponse.json({ error: "조를 확인해 주세요." }, { status: 400 });
     const db = database();
     if (body.action === "release") {
-      const { data, error } = await db.from("ice_rooms").update({ host_name: null, host_hash: hashToken(newToken()) }).eq("id", body.roomId)
+      const { data, error } = await db.from("ice_rooms").update({ host_name: null, host_profile_id: null, host_hash: hashToken(newToken()) }).eq("id", body.roomId)
         .eq("invite_hash", hash).not("team_number", "is", null).select("id").maybeSingle();
       if (error) return safeFailure();
       if (!data) return NextResponse.json({ error: "조를 찾을 수 없어요." }, { status: 404 });
