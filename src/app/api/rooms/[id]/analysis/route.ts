@@ -18,7 +18,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const profiles = ((data || []) as ProfileRow[]).map(toProfile);
     const { data: currentRoom, error: roomError } = await db.from("ice_rooms").select("topic_attempts").eq("id", id).single();
     if (roomError) return safeFailure();
-    const result = await createQuestions(profiles, Math.max(0, (currentRoom?.topic_attempts || 1) - 1));
+    const { data: prev } = await db.from("ice_questions").select("text").eq("room_id", id).order("position");
+    const result = await createQuestions(profiles, Math.max(0, (currentRoom?.topic_attempts || 1) - 1), (prev || []).map((q: { text: string }) => q.text));
     const { data: finished, error: saveError } = await db.rpc("ice_finish_questions", {
       p_room: id, p_generation: generation, p_questions: result.questions, p_source: result.source,
     });
