@@ -10,6 +10,13 @@ export default function JoinForm({ id, onComplete }: { id?: string; onComplete?:
   const [room, setRoom] = useState("");
   const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
   const [error, setError] = useState("");
+  const [valid, setValid] = useState(false);
+  function checkForm(form: HTMLFormElement) {
+    const values = new FormData(form);
+    const introduction = String(values.get("introduction") || "").trim();
+    setValid(form.checkValidity() && !!String(values.get("name") || "").trim() && !!introduction
+      && Array.from(introduction).length <= 50 && values.getAll("domains").length > 0);
+  }
   useEffect(() => {
     if (!id) {
       fetch("/api/event").then(async (res) => { const data = await res.json(); if (!res.ok) throw new Error(data.error); setTeams(data.teams); setRoom("행사"); })
@@ -48,15 +55,16 @@ export default function JoinForm({ id, onComplete }: { id?: string; onComplete?:
         }),
       });
       const data = await res.json();
+      if (res.status === 409) { router.push("/room/" + encodeURIComponent(typeof data.roomId === "string" ? data.roomId : targetId)); return; }
       if (!res.ok) throw new Error(data.error);
-      if (onComplete) onComplete(); else router.push("/room/" + targetId);
+      router.push("/room/" + targetId + "/join/done");
     } catch (e) { setError(e instanceof Error ? e.message : "다시 시도해 주세요."); setBusy(false); }
   }
   const content = <>
     <div className="eyebrow">내 프로필 만들기</div>
     <h1>반가워요!<br />나를 소개해 주세요.</h1>
     <p className="muted">{room === "행사" ? "참여할 조를 선택해 주세요." : room ? room + " 팀에 참여하고 있어요." : "팀 정보를 확인하고 있어요."}</p>
-    <form onSubmit={submit} className="panel stack">
+    <form onSubmit={submit} onChange={(event) => checkForm(event.currentTarget)} onInput={(event) => checkForm(event.currentTarget)} className="panel stack">
       {!id && <label>참여할 조<select name="teamId" defaultValue="" required><option value="" disabled>조를 선택해 주세요</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>}
       <label>이름<input name="name" maxLength={40} placeholder="이름을 입력해 주세요" required /></label>
       <label>직군<select name="occupation" defaultValue="" required><option value="" disabled>직군을 선택해 주세요</option>{occupations.map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -66,7 +74,7 @@ export default function JoinForm({ id, onComplete }: { id?: string; onComplete?:
       <label>링크드인 / SNS <span className="muted">(선택)</span><input name="socialUrl" type="url" placeholder="https://" /></label>
       <label className="inline"><input type="checkbox" name="consent" required /> 프로필을 팀에 공유하고 관심사를 질문 생성에 사용하는 데 동의해요.</label>
       {error && <p className="error" role="alert">{error}</p>}
-      <button disabled={busy || !room}>{busy ? "등록 중..." : "프로필 등록하기"}</button>
+      <button disabled={busy || !room || !valid}>{busy ? "등록 중..." : "프로필 등록하기"}</button>
     </form>
   </>;
   return onComplete ? <div>{content}</div> : <main className="container narrow">{content}</main>;

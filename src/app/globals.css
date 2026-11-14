@@ -81,3 +81,17 @@ input:not([type=checkbox]), select, textarea { border-radius: 14px; }
 .tag { border-radius: 999px; }
 @media (max-width: 360px) { .team-grid { grid-template-columns: 1fr; } .person-card { gap: 10px; } }
 @media (prefers-reduced-motion: reduce) { .hero-characters img { animation: none; } }
+
+/* 참가자 조별 카드와 등록 완료 화면 */
+.done-card { margin-top: 36px; padding: 32px 24px; text-align: center; }
+.done-card .button { margin-top: 14px; }
+.event-teams { margin-top: 16px; }
+.event-team { background: #fff; }
+.event-team.my-team { background: #edf3ff; border-color: #b8ccff; }
+.event-team-heading { justify-content: space-between; margin-bottom: 12px; }
+.event-team-heading h2 { margin: 0; }
+.card-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 14px; scroll-snap-type: x proximity; }
+.event-profile { flex: 0 0 190px; min-width: 0; background: #f4f7ff; scroll-snap-align: start; }
+.event-profile .character-avatar { width: 64px; height: 64px; margin-bottom: 12px; }
+.event-profile p { overflow-wrap: anywhere; }
+.event-team > a { display: inline-block; margin-top: 8px; font-weight: 700; }
