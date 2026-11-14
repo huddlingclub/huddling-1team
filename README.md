@@ -8,9 +8,11 @@
 2. 새 Supabase 프로젝트에는 `supabase/migrations`의 SQL을 번호 순서대로 검토해 한 번씩 적용합니다. 기존 프로젝트에는 적용 이력을 먼저 확인합니다. 투표 테이블은 보존하며 화면에서 사용하지 않습니다.
 3. `npm install` 후 `npm run dev`를 실행합니다.
 4. `node scripts/setup-event.mjs --base-url http://localhost:3000`을 실행합니다. 다른 배포 주소라면 해당 주소를 넣습니다.
-5. 스크립트가 알려준 `.env.huddling-links-*.local` 파일의 `EVENT_LINK`를 행사 참여자에게, `TEAM_01_HOST_LINK`부터 `TEAM_15_HOST_LINK`를 각 조장에게 전달합니다. 팀장 링크는 누구나 해당 조의 주제를 생성할 수 있으므로 해당 조장에게만 공유합니다. 파일은 Git에서 제외됩니다.
+5. 스크립트가 알려준 `.env.huddling-links-*.local` 파일의 `EVENT_LINK`를 행사 참여자에게 전달합니다. 팀장은 첫 화면의 **조 만들기**에서 조와 이름을 선택합니다. 팀장 링크를 배포할 필요는 없습니다.
 
 스크립트는 15개 조가 이미 있으면 재사용하고 다른 프로젝트 데이터를 지우지 않습니다. 토큰을 변경하지 않고 동일한 로컬 `.env.local`로 재실행해야 합니다. 링크 파일은 주소별로 따로 생성되며, 기존 파일을 덮어쓰지 않습니다.
+
+배포 환경에도 `.env.local`의 `HUDDLING_EVENT_TOKEN`을 서버 전용 환경변수로 설정해야 팀장 조 선택이 동작합니다. 토큰은 공개하거나 클라이언트 변수로 설정하지 마세요. 조를 선점한 팀장의 권한은 현재 브라우저의 쿠키로 유지됩니다.
 
 GPT를 사용하지 못하면 관심사 기반 기본 주제 3개가 표시됩니다. 유료 호출은 승인 후 서버의 `OPENAI_API_KEY`, `OPENAI_MODEL=gpt-6-luna`, `AI_ENABLED=true`, `AI_ALLOW_PAID=true`를 설정했을 때만 실행됩니다. GPT 출력 한도는 4000, reasoning effort는 medium입니다.
 

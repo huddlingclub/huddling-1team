@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Profile } from "@/lib/profile";
+import JoinForm from "@/components/join-form";
 
 type RoomData = { room: { id: string; name: string; phase: string }; profiles: Profile[]; myProfileId: string | null;
   isHost: boolean; questions: { id: string; text: string }[]; source: "openai" | "basic" | null };
@@ -11,6 +12,7 @@ export default function RoomView({ id }: { id: string }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [hostJustEntered, setHostJustEntered] = useState(false);
+  const [showProfileForm, setShowProfileForm] = useState(false);
   const load = useCallback(async () => {
     try {
       const response = await fetch("/api/rooms/" + id, { cache: "no-store" });
@@ -22,6 +24,10 @@ export default function RoomView({ id }: { id: string }) {
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | undefined;
     async function init() {
+      if (new URLSearchParams(window.location.search).get("host") === "welcome") {
+        setHostJustEntered(true);
+        history.replaceState(null, "", window.location.pathname + window.location.hash);
+      }
       const fragment = window.location.hash.slice(1);
       if (fragment) {
         history.replaceState(null, "", window.location.pathname);
@@ -67,7 +73,8 @@ export default function RoomView({ id }: { id: string }) {
       {error && <p className="error" role="alert">{error}</p>}
     </section>
     <section className="panel"><div className="inline" style={{ justifyContent: "space-between" }}><div><div className="eyebrow">MEET THE TEAM</div><h2>함께 모인 사람들 <span className="muted">{profiles.length}</span></h2></div>
-      {!myProfileId && <Link className="button secondary" href="/event/join">내 프로필 작성</Link>}</div>
+      {!myProfileId && (isHost ? <button className="secondary" onClick={() => setShowProfileForm(!showProfileForm)}>내 프로필 등록</button> : <Link className="button secondary" href="/event/join">내 프로필 작성</Link>)}</div>
+      {isHost && !myProfileId && showProfileForm && <JoinForm id={id} onComplete={() => { setShowProfileForm(false); void load(); }} />}
       {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : <div className="profiles">{profiles.map((profile) => <article className="profile" key={profile.id}>
         <h3>{profile.name} {profile.id === myProfileId && <span className="status">나</span>}</h3>
         <div className="status">{profile.occupation} · {profile.experience}</div><p>{profile.introduction}</p>

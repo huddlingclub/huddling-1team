@@ -3,7 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { domainOptions, experienceLevels, occupations } from "@/lib/profile";
 
-export default function JoinForm({ id }: { id?: string }) {
+export default function JoinForm({ id, onComplete }: { id?: string; onComplete?: () => void }) {
   const router = useRouter();
   const [intro, setIntro] = useState("");
   const [busy, setBusy] = useState(false);
@@ -49,10 +49,10 @@ export default function JoinForm({ id }: { id?: string }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      router.push("/room/" + targetId);
+      if (onComplete) onComplete(); else router.push("/room/" + targetId);
     } catch (e) { setError(e instanceof Error ? e.message : "다시 시도해 주세요."); setBusy(false); }
   }
-  return <main className="container narrow">
+  const content = <>
     <div className="eyebrow">내 프로필 만들기</div>
     <h1>반가워요!<br />나를 소개해 주세요.</h1>
     <p className="muted">{room === "행사" ? "참여할 조를 선택해 주세요." : room ? room + " 팀에 참여하고 있어요." : "팀 정보를 확인하고 있어요."}</p>
@@ -68,5 +68,6 @@ export default function JoinForm({ id }: { id?: string }) {
       {error && <p className="error" role="alert">{error}</p>}
       <button disabled={busy || !room}>{busy ? "등록 중..." : "프로필 등록하기"}</button>
     </form>
-  </main>;
+  </>;
+  return onComplete ? <div>{content}</div> : <main className="container narrow">{content}</main>;
 }

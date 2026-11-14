@@ -29,10 +29,11 @@ chmodSync(envPath, 0o600);
 
 const db = createClient(projectUrl, secret, { auth: { persistSession: false, autoRefreshToken: false } });
 const inviteHash = digest(vars.HUDDLING_EVENT_TOKEN);
-const { data: existing, error: readError } = await db.from("ice_rooms").select("id,name,team_number,host_hash")
+const { data: existing, error: readError } = await db.from("ice_rooms").select("id,name,team_number,host_hash,host_name")
   .eq("invite_hash", inviteHash).not("team_number", "is", null);
 if (readError) throw new Error("행사 조 조회에 실패했습니다. DB 마이그레이션을 확인해 주세요.");
 for (const room of existing || []) {
+  if (room.host_name) continue;
   const key = "HUDDLING_HOST_TOKEN_" + String(room.team_number).padStart(2, "0");
   if (!vars[key] || digest(vars[key]) !== room.host_hash) throw new Error(room.team_number + "조 팀장 토큰이 기존 방과 다릅니다. 덮어쓰지 않았습니다.");
 }
@@ -45,7 +46,7 @@ if (missing.length) {
   const { error } = await db.from("ice_rooms").insert(missing);
   if (error) throw new Error("행사 조 생성에 실패했습니다. 기존 데이터는 삭제하지 않았습니다.");
 }
-const { data: teams, error: teamError } = await db.from("ice_rooms").select("id,team_number")
+const { data: teams, error: teamError } = await db.from("ice_rooms").select("id,team_number,host_name")
   .eq("invite_hash", inviteHash).not("team_number", "is", null).order("team_number");
 if (teamError || teams?.length !== 15) throw new Error("15개 조 확인에 실패했습니다.");
 const linksFile = resolve(".env.huddling-links-" + digest(base.origin).slice(0, 8) + ".local");
@@ -54,6 +55,7 @@ if (!existsSync(linksFile)) {
   eventUrl.hash = vars.HUDDLING_EVENT_TOKEN;
   const lines = ["# 비공개 초대 링크: GitHub·채팅·로그에 전체 목록을 올리지 마세요.", "EVENT_LINK='" + eventUrl.toString() + "'"];
   for (const team of teams) {
+    if (team.host_name) continue;
     const url = new URL("/room/" + team.id, base);
     url.hash = new URLSearchParams({ host: vars["HUDDLING_HOST_TOKEN_" + String(team.team_number).padStart(2, "0")], event: vars.HUDDLING_EVENT_TOKEN }).toString();
     lines.push("TEAM_" + String(team.team_number).padStart(2, "0") + "_HOST_LINK='" + url.toString() + "'");
