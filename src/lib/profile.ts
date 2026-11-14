@@ -19,11 +19,10 @@ export const profileInputSchema = z.object({
   introduction: z.string().trim().min(1, "한 줄 소개를 입력해 주세요.")
     .refine((value) => Array.from(value).length <= 50, "한 줄 소개는 50자까지 입력할 수 있어요."),
   socialUrl,
-  consent: z.literal(true, { error: "프로필 공유와 AI 분석 동의가 필요해요." }),
+  consent: z.literal(true, { error: "프로필 공유와 관심사의 AI 분석 동의가 필요해요." }),
 });
 export const roomInputSchema = z.object({ name: z.string().trim().min(1, "팀 이름을 입력해 주세요.").max(50) });
 export type ProfileInput = z.infer<typeof profileInputSchema>;
 export type Profile = Omit<ProfileInput, "consent"> & { id: string };
-export type Match = { profileId: string; targetId: string; reason: string };
-export type Analysis = { questions: string[]; matches: Match[]; source: "openai" | "basic" };
-
+export type Question = { id: string; text: string };
+export type Analysis = { questions: Question[]; source: "openai" | "basic" };
