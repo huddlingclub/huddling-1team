@@ -129,40 +129,11 @@ flowchart TB
 
 ## 데이터 모델
 
-```mermaid
-erDiagram
-  ice_rooms ||--o{ ice_profiles : has
-  ice_rooms ||--o{ ice_questions : has
-  ice_rooms |o--o| ice_profiles : "host_profile_id"
-  ice_rooms {
-    uuid id PK
-    int team_number "1~15"
-    text invite_hash "행사 토큰 해시"
-    text host_hash "팀장 토큰 해시"
-    text host_name
-    uuid host_profile_id FK
-    text phase "collecting · generating"
-    int topic_attempts "시간당 생성 횟수"
-    timestamptz topics_generated_at
-  }
-  ice_profiles {
-    uuid id PK
-    uuid room_id FK
-    text token_hash "본인 카드 식별"
-    text name
-    text occupation
-    text experience
-    text_array domains
-    text introduction "1~50자"
-  }
-  ice_questions {
-    uuid id PK
-    uuid room_id FK
-    int position
-    text text
-    text source "openai · basic"
-  }
-```
+<p align="center">
+  <img src="docs/screenshots/erd.png" alt="데이터 모델 요약: ice_rooms 1:N ice_profiles, ice_rooms 1:N ice_questions" width="760" />
+</p>
+
+> 핵심 테이블 3개만 요약했습니다. 전체 스키마는 `supabase/migrations/`에 있습니다.
 
 ## AI 공통 주제 생성
 
