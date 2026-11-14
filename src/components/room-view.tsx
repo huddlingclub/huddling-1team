@@ -122,15 +122,11 @@ export default function RoomView({ id }: { id: string }) {
       <h2>이 팀원 프로필로 공통 주제를 생성할까요?</h2>
       {(busy || room.phase === "generating") ? <div className="generating" role="status"><Mallang size="S" />생성 중...</div>
         : <button disabled={profiles.length === 0} onClick={generate}>{questions.length ? "공통 주제 다시 생성하기" : "공통 주제 생성하기"}</button>}
-      <p className="status" style={{ marginTop: 12 }}>다시 생성하면 아래 주제가 새 내용으로 바뀌어요.</p>
-      {leader && <p className="status">{leader.count}명 등록{leader.names?.length ? " · " + leader.names.join(", ") : ""}</p>}
       {error && <p className="error" role="alert">{error}</p>}
     </section>}
-    {(isHost || questions.length > 0) && <section className="panel rise" style={{ ["--i" as string]: 1 }}><div className="topics-head"><h2>📌 공통 주제</h2><span className="status">상단 고정 · 전원 공개</span></div>
+    {(isHost || questions.length > 0) && <section className="panel rise" style={{ ["--i" as string]: 1 }}><div className="topics-head"><h2>📌 공통 주제</h2></div>
       {questions.length ? <ol className="topics" key={questions.map((q) => q.id).join(",")}>{questions.map((question, index) => <li key={question.id}><span className="topic-number" aria-hidden="true">{index + 1}</span><span>{question.text}</span></li>)}</ol>
         : <p className="muted">아직 주제가 없어요.</p>}
-      {questions.length > 0 && data.generatedAt && <p className="status">{relativeTime(data.generatedAt)}</p>}
-      {data.source && <p className="status">{data.source === "basic" ? "관심사 기반 기본 주제" : "GPT가 만든 주제"}</p>}
       {!isHost && error && <p className="error" role="alert">{error}</p>}
     </section>}
     </div>
