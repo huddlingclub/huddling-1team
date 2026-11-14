@@ -213,3 +213,200 @@ fieldset { padding: 0; border: 0; margin: 0; }
 .admin-toast { padding: var(--space-8) var(--space-12); border-radius: var(--radius-sm); background: var(--color-primary-subtle); font-size: var(--font-size-label); }
 @media (max-width: 360px) { .v3-team-grid { gap: var(--space-8); } .v3-team-card { padding: var(--space-16); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } .hero-characters img { animation: none; } }
+
+/* =====================================================================
+ * 말랑 v4 — 디자이너 시안 (Figma 21-1890 색 · 21-1646/1552 컴포넌트 · 화면 21-1745/1705/1766 등)
+ * 위 토큰 이름은 그대로 두고 값만 시안 색으로 다시 매핑한다. 되돌리려면 이 :root 블록만 지우면 된다.
+ * ===================================================================== */
+:root {
+  --color-primary: #1F6FE5;           /* color/primary */
+  --color-primary-pressed: #175BC4;
+  --color-primary-disabled: #C3DCFC;
+  --color-on-primary: #FFFFFF;
+  --color-primary-subtle: #EEF5FF;
+  --color-brand-accent: #6BB0F6;
+  --color-bg: #F4F7FB;                /* color/bg/canvas */
+  --color-bg-soft: #F4F7FB;
+  --color-surface: #FFFFFF;           /* color/surface/sheet */
+  --color-surface-muted: #F2F4F6;     /* color/surface/tile */
+  --color-border: #E5E8EB;
+  --color-inverse: #1F6FE5;           /* 선택된 칩 = primary */
+  --color-on-inverse: #FFFFFF;
+  --color-text-primary: #3A3D42;      /* color/text/strong */
+  --color-text-secondary: #6B7684;
+  --color-text-tertiary: #8B95A1;
+  --color-success: #12A06A;
+  --color-stage-start: #D6E8FC;
+  --color-stage-end: #9CC9F7;
+  --color-character-bg: #DDEBFB;      /* color/character/body */
+  --color-character-shade: #A9CDF6;
+  --color-character-eye: #1E1F24;
+  /* 조 색은 작은 점에만 쓴다 (color/team/1~5) */
+  --color-accent-butter: #FFD98A;
+  --color-accent-lilac: #B9A7E3;
+  --color-accent-blush: #F9A8B8;
+  --color-accent-periwinkle: #A3B1E3;
+  --color-accent-peach: #F8C49A;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --font-size-display: 26px;          /* 화면 제목 ExtraBold 26 */
+  --font-size-title: 18px;
+  --font-size-heading: 17px;
+  --font-size-label: 14px;
+  --shadow-sheet: 0 8px 32px rgba(49, 130, 246, .08);
+  --shadow-bubble: 0 4px 16px rgba(25, 31, 40, .06);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+body { background: var(--color-bg); }
+.container, .narrow { padding-top: var(--space-24); }
+
+/* ---------- 화면 머리 (PageHeader) ---------- */
+.page-header { position: relative; text-align: center; padding: var(--space-8) 0 var(--space-20); }
+.page-header h1 { color: var(--color-primary); margin: var(--space-8) 0 var(--space-8); }
+.page-header .muted { margin: 0; font-size: var(--font-size-body); }
+.page-header-back { text-align: left; }
+.back-link { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; font-size: 22px; font-weight: 700; margin-left: -12px; }
+
+/* ---------- 흰 시트 ---------- */
+.sheet { background: var(--color-surface); border-radius: var(--radius-xl); padding: var(--space-20); box-shadow: var(--shadow-sheet); }
+.panel { border: 0; border-radius: var(--radius-xl); box-shadow: var(--shadow-sheet); }
+
+/* ---------- 버튼 (Figma Button 350x56) ---------- */
+button, .button { min-height: 56px; border-radius: var(--radius-md); font-size: var(--font-size-heading); font-weight: 700; transition: transform .18s var(--ease-spring), box-shadow .2s, background-color .15s; }
+button:not(:disabled):hover, .button:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(31, 111, 229, .18); }
+button:not(:disabled):active, .button:active { animation: press-bounce .32s var(--ease-spring); }
+button:not(.secondary):not(.filter-chip):not(.admin-expand):not(.admin-button):not(:disabled):active, .button:not(.secondary):active { background: var(--color-primary-pressed); }
+button:disabled { opacity: 1; background: var(--color-primary-disabled); color: var(--color-surface); }
+button.secondary:disabled { background: var(--color-surface); color: var(--color-text-tertiary); border-color: var(--color-border); }
+button.secondary, .button.secondary { color: var(--color-primary); border-color: var(--color-border); }
+@keyframes press-bounce { 0% { transform: scale(1); } 35% { transform: scale(.96); } 70% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+/* ---------- 입력 (Figma Input: 회색 채움, focus 파란 테두리) ---------- */
+input:not([type=checkbox]):not([type=radio]), select, textarea { background: var(--color-surface-muted); border: 1.5px solid transparent; border-radius: var(--radius-sm); min-height: 48px; padding: var(--space-12) var(--space-16); }
+input:not([type=checkbox]):not([type=radio]):focus, select:focus, textarea:focus { outline: none; background: var(--color-surface); border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-subtle); }
+label, legend { color: var(--color-text-secondary); font-weight: 600; }
+fieldset legend { color: var(--color-text-primary); font-size: var(--font-size-heading); font-weight: 700; margin-bottom: var(--space-4); }
+
+/* ---------- 칩 (Figma Chip: 흰 외곽선 / 선택 파랑) ---------- */
+.chip, .filter-chip { min-height: 40px; padding: var(--space-8) var(--space-16); border-color: var(--color-border); font-size: var(--font-size-label); transition: transform .25s var(--ease-spring), background-color .15s, color .15s; }
+.chip:has(input:checked), .filter-chip.selected { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); animation: chip-spring .38s var(--ease-spring); }
+@keyframes chip-spring { 0% { transform: scale(.9); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
+
+/* ---------- 관심 분야 SelectTile (Figma 21-1639) ---------- */
+.select-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); margin-top: var(--space-8); }
+.select-tile { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-8); min-height: 96px; padding: var(--space-12) var(--space-4); border: 2px solid transparent; border-radius: var(--radius-md); background: var(--color-surface-muted); color: var(--color-text-secondary); font-size: var(--font-size-label); font-weight: 600; cursor: pointer; transition: transform .25s var(--ease-spring), background-color .15s, border-color .15s; }
+.select-tile input { position: absolute; opacity: 0; }
+.select-tile::before { content: ""; width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--color-brand-accent), var(--color-primary)); }
+.select-tile:has(input:checked) { background: var(--color-primary-subtle); border-color: var(--color-primary); color: var(--color-primary); animation: chip-spring .38s var(--ease-spring); }
+.select-tile:has(input:focus-visible) { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+.select-tile:active { transform: scale(.96); }
+
+/* ---------- 말랑 캐릭터 (Figma 21-1598, 140x124) ---------- */
+.mallang { display: inline-block; position: relative; width: 140px; height: 124px; flex: none; }
+.mallang-S { width: 70px; height: 62px; }
+.mallang-S .mallang-inner { transform: scale(.5); }
+.mallang-L { width: 252px; height: 223px; }
+.mallang-L .mallang-inner { transform: scale(1.8); }
+.mallang-inner { position: absolute; left: 0; top: 0; width: 140px; height: 124px; transform-origin: 0 0; cursor: pointer; touch-action: manipulation; }
+.mallang-inner > * { position: absolute; display: block; }
+.mallang-inner img { display: block; max-width: none; }
+.mallang-ground { left: 22px; top: 108px; width: 96px; height: 14px; }
+.mallang-ground img { position: absolute; inset: -57.14% -8.33%; width: calc(100% + 16.66%); height: calc(100% + 114.28%); }
+.mallang-body { left: 12px; top: 6px; width: 116px; height: 104px; border-radius: 58px 58px 40px 40px; background: var(--color-character-bg); box-shadow: 0 6px 12px var(--color-character-shade), inset -6px -10px 18px var(--color-character-shade); }
+.mallang-highlight { left: 36px; top: 14px; width: 46px; height: 26px; }
+.mallang-highlight img { position: absolute; inset: -38.46% -21.74%; width: calc(100% + 43.48%); height: calc(100% + 76.92%); }
+.mallang-hand { top: 64px; width: 32px; height: 30px; }
+.mallang-hand img { position: absolute; left: -18.75%; top: -10%; width: 137.5%; height: 140%; }
+.mallang-hand-l { left: 0; } .mallang-hand-r { left: 110px; }
+.mallang-blush { top: 64px; width: 16px; height: 9px; }
+.mallang-blush img { position: absolute; inset: -33.33% -18.75%; width: 137.5%; height: 166.66%; }
+.mallang-blush-l { left: 30px; } .mallang-blush-r { left: 94px; }
+.mallang-eye { top: 44px; width: 17px; height: 17px; } .mallang-eye-l { left: 44px; } .mallang-eye-r { left: 80px; }
+.mallang-sparkle { top: 47px; width: 5px; height: 5px; } .mallang-sparkle-l { left: 48px; } .mallang-sparkle-r { left: 84px; }
+.mallang-mouth { left: 61.5px; top: 48px; font-size: 18px; font-weight: 700; line-height: normal; color: var(--color-character-eye); }
+.mallang-float { animation: mallang-float 3.2s ease-in-out infinite; }
+.mallang-inner.is-squish { animation: jelly .6s var(--ease-spring); }
+@keyframes mallang-float { 50% { transform: translateY(-8px); } }
+@keyframes jelly { 0% { transform: scale(1, 1); } 25% { transform: scale(1.15, .85); } 50% { transform: scale(.92, 1.08); } 75% { transform: scale(1.04, .97); } 100% { transform: scale(1, 1); } }
+.mallang-S .mallang-inner.is-squish { animation-name: jelly-s; }
+.mallang-L .mallang-inner.is-squish { animation-name: jelly-l; }
+@keyframes jelly-s { 0% { transform: scale(.5); } 25% { transform: scale(.58, .42); } 50% { transform: scale(.46, .54); } 100% { transform: scale(.5); } }
+@keyframes jelly-l { 0% { transform: scale(1.8); } 25% { transform: scale(2.07, 1.53); } 50% { transform: scale(1.66, 1.94); } 100% { transform: scale(1.8); } }
+
+/* ---------- 말풍선 · 캐릭터 무대 ---------- */
+.speech-bubble { display: inline-flex; flex-direction: column; align-items: center; animation: bubble-float 3.6s ease-in-out infinite; animation-delay: -1.2s; }
+.speech-bubble-body { background: var(--color-surface); padding: var(--space-16) var(--space-24); border-radius: var(--radius-xl); box-shadow: var(--shadow-bubble); font-size: var(--font-size-heading); font-weight: 700; line-height: 1.4; letter-spacing: -.01em; color: var(--color-text-primary); white-space: nowrap; }
+.speech-bubble-tail { width: 20px; height: 9px; transform: rotate(180deg); }
+@keyframes bubble-float { 50% { transform: translateY(-4px); } }
+.character-stage { display: flex; flex-direction: column; align-items: center; gap: var(--space-12); padding: 28px var(--space-16) var(--space-24); border-radius: var(--radius-2xl); background: linear-gradient(151deg, var(--color-stage-start) 14%, var(--color-stage-end) 86%); overflow: hidden; }
+.character-stage-L { padding: var(--space-32) var(--space-16); }
+
+/* ---------- 팀장 깃발 · RoleTag ---------- */
+.leader-flag { width: 16px; height: 16px; border-radius: 4px; vertical-align: -3px; margin-right: 4px; }
+.role-tag { display: inline-flex; align-items: center; gap: 2px; padding: 4px 10px; font-size: 12px; }
+.role-host { background: var(--color-primary-subtle); color: var(--color-primary); }
+.role-member { background: var(--color-surface-muted); color: var(--color-text-secondary); }
+
+/* ---------- 첫 화면: 조 타일 (Figma TeamTile 21-1646) ---------- */
+.v3-home .character-stage { margin-bottom: var(--space-16); }
+.team-sheet { background: var(--color-surface); border-radius: var(--radius-xl); padding: var(--space-16); box-shadow: var(--shadow-sheet); }
+.v3-team-grid { gap: var(--space-12); }
+.v3-team-card { position: relative; min-height: 132px; padding: var(--space-16); border-radius: var(--radius-md); background: var(--color-surface-muted) !important; border: 2px solid transparent; transition: transform .2s var(--ease-spring), box-shadow .2s, border-color .15s; }
+.v3-team-card::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--team-dot); margin-bottom: var(--space-12); }
+.v3-team-card strong { font-size: 22px; font-weight: 800; line-height: 1.3; }
+.v3-team-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(31, 111, 229, .12); }
+.v3-team-card:active { animation: press-bounce .32s var(--ease-spring); }
+.v3-team-card .team-status { margin-top: var(--space-4); padding: 0; border: 0; background: none !important; font-size: 12px; font-weight: 600; color: var(--color-text-tertiary); display: inline-flex; align-items: center; }
+.v3-team-card .team-status.has-host { color: var(--color-success); }
+.team-color-0 { --team-dot: var(--color-accent-butter); }
+.team-color-1 { --team-dot: var(--color-accent-lilac); }
+.team-color-2 { --team-dot: var(--color-accent-blush); }
+.team-color-3 { --team-dot: var(--color-accent-periwinkle); }
+.team-color-4 { --team-dot: var(--color-accent-peach); }
+.home-admin { margin-top: var(--space-24); text-align: center; opacity: .75; }
+
+/* ---------- 역할 선택 ---------- */
+.v3-team-summary { background: var(--color-surface) !important; box-shadow: var(--shadow-sheet); margin: var(--space-16) 0 var(--space-24); text-align: center; }
+.v3-team-summary h1 { color: var(--color-primary); }
+.v3-team-summary .team-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--team-dot); }
+
+/* ---------- 조 페이지 (21-1766 / 21-1862) ---------- */
+.room-layout { display: grid; gap: var(--space-16); }
+.leader-card .leader-card-head { display: flex; align-items: center; gap: var(--space-8); margin-bottom: var(--space-12); }
+.leader-card h2 { font-size: var(--font-size-heading); }
+.leader-card button { width: 100%; }
+.topics-head { display: flex; align-items: baseline; gap: var(--space-8); }
+.topics-head h2 { margin: 0; font-size: var(--font-size-heading); }
+.topics li { border: 0; background: var(--color-primary-subtle); border-radius: var(--radius-md); min-height: 72px; font-size: 15px; animation: topic-pop .5s var(--ease-spring) both; }
+.topics li:nth-child(2) { animation-delay: .12s; } .topics li:nth-child(3) { animation-delay: .24s; }
+.topic-number { width: 28px; height: 28px; flex: 0 0 28px; background: var(--color-primary); color: var(--color-on-primary); }
+@keyframes topic-pop { 0% { opacity: 0; transform: scale(.85) translateY(8px); } 70% { opacity: 1; transform: scale(1.03); } 100% { transform: none; } }
+.generating { display: flex; flex-direction: column; align-items: center; gap: var(--space-8); padding: var(--space-16) 0; color: var(--color-primary); font-weight: 700; }
+.generating .mallang-inner { animation: hop .7s ease-in-out infinite; }
+.generating .mallang-S .mallang-inner { animation-name: hop-s; }
+@keyframes hop-s { 0%, 100% { transform: translateY(0) scale(.5); } 40% { transform: translateY(-14px) scale(.48, .53); } 80% { transform: translateY(0) scale(.55, .45); } }
+.profile { border: 0; border-radius: var(--radius-md); box-shadow: 0 2px 12px rgba(25, 31, 40, .05); }
+.profile h3 { font-size: var(--font-size-heading); }
+.tag { border-color: var(--color-border); font-size: 13px; padding: 6px 12px; }
+.shared-domain { background: var(--color-primary-subtle); border-color: var(--color-primary); color: var(--color-primary); }
+.character-avatar { background: var(--color-primary-subtle); }
+
+/* ---------- 진입 애니메이션 (stagger) ---------- */
+.rise { animation: rise .45s var(--ease-spring) both; animation-delay: calc(var(--i, 0) * 50ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* ---------- 데스크톱 (21-1790 / 21-1841 / 21-1801 / 21-1862) ---------- */
+@media (min-width: 900px) {
+  .v3-home, .room-page { max-width: 1120px; }
+  .v3-home .v3-team-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .v3-home .character-stage { padding: var(--space-32); }
+  .join-page { max-width: 720px; }
+  .room-page .room-layout { grid-template-columns: 420px 1fr; align-items: start; }
+  .room-page .profiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mallang-float, .speech-bubble, .mallang-inner.is-squish, .generating .mallang-inner, .topics li, .rise, .chip, .filter-chip, .select-tile, .v3-team-card, button, .button { animation: none !important; transition: none !important; }
+  button:hover, .button:hover, .v3-team-card:hover { transform: none; }
+}
