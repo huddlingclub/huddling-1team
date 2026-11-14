@@ -1,4 +1,5 @@
 "use client";
+import { occupationChar } from "@/lib/characters";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Profile } from "@/lib/profile";
@@ -11,7 +12,6 @@ type RoomData = { room: { id: string; name: string; phase: string }; profiles: T
   isHost: boolean; myDomains?: string[]; questions: { id: string; text: string }[]; source: "openai" | "basic" | null; generatedAt?: string | null };
 type LeaderData = { count: number; names: string[] };
 
-const characters: Record<string, string> = { 개발: "developer", 디자인: "designer", 기획: "planner", 마케팅: "marketer", "대표·창업자": "ceo" };
 function relativeTime(value: string) {
   const time = Date.parse(value);
   if (!Number.isFinite(time)) return "";
@@ -141,7 +141,7 @@ export default function RoomView({ id }: { id: string }) {
       {domains.length > 0 && <div className="chips v3-filters" aria-label="관심 분야 필터"><button type="button" className={`filter-chip ${filters.length === 0 ? "selected" : ""}`} aria-pressed={filters.length === 0} onClick={() => setFilters([])}>전체</button>
         {domains.map((domain) => <button type="button" key={domain} className={`filter-chip ${filters.includes(domain) ? "selected" : ""}`} aria-pressed={filters.includes(domain)} onClick={() => setFilters((current) => current.includes(domain) ? current.filter((item) => item !== domain) : [...current, domain])}>{domain}</button>)}</div>}
       {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : shownProfiles.length === 0 ? <p className="muted">선택한 분야의 팀원이 없어요.</p> : <div className="profiles">{shownProfiles.map(({ profile }) => <article className="profile person-card" key={profile.id} ref={(el) => { if (el) cardRefs.current.set(profile.id, el); else cardRefs.current.delete(profile.id); }}>
-        <div className="character-avatar" aria-hidden="true">{characters[profile.occupation] ? <img src={`/characters/${characters[profile.occupation]}.png`} alt="" /> : <span>{profile.occupation.slice(0, 1)}</span>}</div>
+        <div className="character-avatar" aria-hidden="true">{occupationChar(profile.occupation) ? <img className="char-float" src={occupationChar(profile.occupation)!} alt="" decoding="async" /> : <span>{profile.occupation.slice(0, 1)}</span>}</div>
         <div className="person-details">
         <h3>{profile.name} <span className={`role-tag ${profile.isHost ? "role-host" : "role-member"}`}>{profile.isHost && <LeaderFlag />}{profile.isHost ? "팀장" : "팀원"}</span> {profile.id === myProfileId && <span className="tag">나</span>}</h3>
         <div className="status">{profile.occupation} · {profile.experience}</div><p>{profile.introduction}</p>

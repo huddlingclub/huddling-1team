@@ -1,10 +1,10 @@
 "use client";
+import { occupationChar } from "@/lib/characters";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Card = { id: string; name: string; occupation: string; experience: string; domains: string[]; introduction: string };
 type Team = { id: string; name: string; number: number; count: number; cards: Card[] };
-const characters: Record<string, string> = { 개발: "developer", 디자인: "designer", 기획: "planner", 마케팅: "marketer", "대표·창업자": "ceo" };
 export default function EventView() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [myRoomId, setMyRoomId] = useState<string | null>(null);
@@ -41,7 +41,7 @@ export default function EventView() {
       <div className="event-teams">{sorted.map((team) => <section className={"panel event-team" + (team.id === myRoomId ? " my-team" : "")} key={team.id}>
         <div className="inline event-team-heading"><h2>{team.name} {team.id === myRoomId && <span className="tag">내 조</span>}</h2><span className="status">{team.count}명</span></div>
         {team.cards?.length ? <div className="card-scroll" tabIndex={0} aria-label={team.name + " 프로필 카드"}>{team.cards.map((card) => <article className="profile event-profile" key={card.id}>
-          <div className="character-avatar" aria-hidden="true">{characters[card.occupation] ? <img src={`/characters/${characters[card.occupation]}.png`} alt="" /> : <span>{card.occupation.slice(0, 1)}</span>}</div>
+          <div className="character-avatar" aria-hidden="true">{occupationChar(card.occupation) ? <img className="char-float" src={occupationChar(card.occupation)!} alt="" decoding="async" /> : <span>{card.occupation.slice(0, 1)}</span>}</div>
           <h3>{card.name}</h3><div className="status">{card.occupation} · {card.experience}</div><p>{card.introduction}</p>
           <div>{card.domains?.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
         </article>)}</div> : <p className="muted">아직 등록된 카드가 없어요.</p>}

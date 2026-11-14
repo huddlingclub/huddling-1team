@@ -432,3 +432,15 @@ button:not(:disabled):active, .button:active, .v3-team-card:active, .select-tile
   button:not(:disabled):active, .button:active, .v3-team-card:active, .select-tile:active { animation: none; }
   .particles { display: none; }
 }
+
+/* 캐릭터 둥둥 + 말랑 (도연 11/14) */
+.select-tile.has-char::before { display: none; }
+.select-tile img { width: 56px; height: 56px; object-fit: contain; mix-blend-mode: multiply; pointer-events: none; }
+.char-float { animation: char-bob 3s ease-in-out infinite; transform-origin: 50% 90%; }
+.select-tile:nth-child(3n+2) .char-float, .person-card:nth-child(even) .char-float { animation-delay: -1s; }
+.select-tile:nth-child(3n) .char-float, .person-card:nth-child(3n) .char-float { animation-delay: -2s; }
+.select-tile:hover .char-float, .character-avatar:hover .char-float, .v3-role-preview:hover .char-float { animation: char-jelly .6s var(--ease-spring), char-bob 3s ease-in-out .6s infinite; }
+.select-tile:has(input:checked) .char-float { animation: char-jelly .6s var(--ease-spring), char-bob 2.2s ease-in-out .6s infinite; }
+@keyframes char-bob { 0%, 100% { transform: translateY(0) scale(1, 1); } 45% { transform: translateY(-5px) scale(.98, 1.02); } 80% { transform: translateY(0) scale(1.03, .97); } }
+@keyframes char-jelly { 0% { transform: scale(1, 1); } 25% { transform: scale(1.15, .85); } 50% { transform: scale(.92, 1.08); } 75% { transform: scale(1.04, .97); } 100% { transform: scale(1, 1); } }
+@media (prefers-reduced-motion: reduce) { .char-float, .select-tile:hover .char-float, .select-tile:has(input:checked) .char-float { animation: none !important; } }
