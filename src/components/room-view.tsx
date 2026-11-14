@@ -7,6 +7,8 @@ import JoinForm from "@/components/join-form";
 type RoomData = { room: { id: string; name: string; phase: string }; profiles: Profile[]; myProfileId: string | null;
   isHost: boolean; questions: { id: string; text: string }[]; source: "openai" | "basic" | null };
 
+const characters: Record<string, string> = { 개발: "developer", 디자인: "designer", 기획: "planner", 마케팅: "marketer", "대표·창업자": "ceo" };
+
 export default function RoomView({ id }: { id: string }) {
   const [data, setData] = useState<RoomData | null>(null);
   const [error, setError] = useState("");
@@ -65,7 +67,7 @@ export default function RoomView({ id }: { id: string }) {
     <div className="eyebrow" style={{ marginTop: 18 }}>우리 조</div>
     <h1>{room.name}</h1>
     <section className="panel"><div className="eyebrow">TODAY'S TOPICS</div><h2>우리의 공통 대화 주제</h2>
-      {questions.length ? <ol className="topics">{questions.map((question) => <li key={question.id}>{question.text}</li>)}</ol>
+      {questions.length ? <ol className="topics">{questions.map((question, index) => <li key={question.id}><span className="topic-number" aria-hidden="true">{index + 1}</span><span>{question.text}</span></li>)}</ol>
         : <p className="muted">팀장이 팀원의 관심사로 대화 주제를 만들어요.</p>}
       {data.source && <p className="status">{data.source === "basic" ? "관심사 기반 기본 주제" : "GPT가 만든 주제"}</p>}
       {isHost && <><p className="muted">이 팀원 프로필로 공통 주제를 생성할까요?</p>
@@ -75,11 +77,14 @@ export default function RoomView({ id }: { id: string }) {
     <section className="panel"><div className="inline" style={{ justifyContent: "space-between" }}><div><div className="eyebrow">MEET THE TEAM</div><h2>함께 모인 사람들 <span className="muted">{profiles.length}</span></h2></div>
       {!myProfileId && (isHost ? <button className="secondary" onClick={() => setShowProfileForm(!showProfileForm)}>내 프로필 등록</button> : <Link className="button secondary" href="/event/join">내 프로필 작성</Link>)}</div>
       {isHost && !myProfileId && showProfileForm && <JoinForm id={id} onComplete={() => { setShowProfileForm(false); void load(); }} />}
-      {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : <div className="profiles">{profiles.map((profile) => <article className="profile" key={profile.id}>
+      {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : <div className="profiles">{profiles.map((profile) => <article className="profile person-card" key={profile.id}>
+        <div className="character-avatar" aria-hidden="true">{characters[profile.occupation] ? <img src={`/characters/${characters[profile.occupation]}.png`} alt="" /> : <span>{profile.occupation.slice(0, 1)}</span>}</div>
+        <div className="person-details">
         <h3>{profile.name} {profile.id === myProfileId && <span className="status">나</span>}</h3>
         <div className="status">{profile.occupation} · {profile.experience}</div><p>{profile.introduction}</p>
         <div>{profile.domains.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
         {profile.socialUrl && <p><a href={profile.socialUrl} target="_blank" rel="noopener noreferrer">SNS 보기 ↗</a></p>}
+        </div>
       </article>)}</div>}
     </section>
   </main>;

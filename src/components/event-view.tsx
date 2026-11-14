@@ -30,7 +30,7 @@ export default function EventView() {
     {!ready && !error && <p role="status">행사를 불러오고 있어요...</p>}
     {ready && <><Link href="/event/join" className="button">프로필 등록하기 →</Link>
       <section className="panel"><h2>1조부터 15조까지</h2><p className="muted">조를 선택하면 등록된 팀원과 대화 주제를 볼 수 있어요.</p>
-        <div className="profiles">{teams.map((team) => <Link href={"/room/" + team.id} className="profile" key={team.id}>
+        <div className="profiles team-grid">{teams.map((team) => <Link href={"/room/" + team.id} className="profile team-card" key={team.id}>
           <h3>{team.name}</h3><span className="status">참여자 {team.count}명 →</span>
         </Link>)}</div>
       </section></>}
