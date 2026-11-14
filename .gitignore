@@ -13,6 +13,7 @@ build/
 out/
 coverage/
 .vercel/
+*.tsbuildinfo
 
 # 로그와 OS 임시 파일
 *.log
