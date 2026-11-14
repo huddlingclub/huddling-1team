@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { domainOptions, experienceLevels, occupations } from "@/lib/profile";
 import Link from "next/link";
+import Particles from "@/components/particles";
 import { PageHeader } from "@/components/mallang";
 
 const characters: Record<string, string> = { 개발: "developer", 디자인: "designer", 기획: "planner", 마케팅: "marketer", "대표·창업자": "ceo" };
@@ -40,7 +41,12 @@ export default function JoinForm({ id, onComplete, host = false }: { id?: string
       const [publicResponse, roomResponse] = await Promise.all([fetch("/api/rooms/" + id + "/public"), fetch("/api/rooms/" + id)]);
       if (roomResponse.ok) {
         const data = await roomResponse.json();
-        if (data.myProfileId) { router.replace("/room/" + id); return; }
+        if (data.myProfileId && !data.isHost && host) {
+          const promoted = await fetch("/api/host-claim", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, promote: true }) });
+          if (promoted.ok) { router.replace("/room/" + id + "?host=welcome"); return; }
+          const info = await promoted.json().catch(() => ({}));
+          setError(info.error || "팀장으로 바꾸지 못했어요.");
+        } else if (data.myProfileId) { router.replace("/room/" + id); return; }
       }
       if (publicResponse.ok) setRoom((await publicResponse.json()).name);
     }
@@ -67,6 +73,7 @@ export default function JoinForm({ id, onComplete, host = false }: { id?: string
     } catch (e) { setError(e instanceof Error ? e.message : "다시 시도해 주세요."); setBusy(false); }
   }
   const content = <>
+    {!onComplete && <Particles />}
     <PageHeader back={id && !onComplete ? <Link className="back-link" href={`/room/${id}/start`} aria-label="역할 선택으로">‹</Link> : undefined}
       title={<><span className={`role-tag ${host ? "role-host" : "role-member"}`}>{room && room !== "행사" ? room + " " : ""}{host ? "팀장" : "팀원"}</span><br />프로필을 알려주세요</>}
       sub={room === "행사" ? "참여할 조를 선택해 주세요." : room ? room + " 팀원에게 보일 내 소개예요" : "팀 정보를 확인하고 있어요."} />

@@ -410,3 +410,25 @@ fieldset legend { color: var(--color-text-primary); font-size: var(--font-size-h
   .mallang-float, .speech-bubble, .mallang-inner.is-squish, .generating .mallang-inner, .topics li, .rise, .chip, .filter-chip, .select-tile, .v3-team-card, button, .button { animation: none !important; transition: none !important; }
   button:hover, .button:hover, .v3-team-card:hover { transform: none; }
 }
+
+/* 말랑 호버·프레스 (도연 11/14: 모든 메인 버튼 · 조 카드) */
+button:not(:disabled), .button, .v3-team-card, .select-tile { transition: transform .35s var(--ease-spring), box-shadow .25s, background-color .15s; will-change: transform; }
+button:not(:disabled):hover, .button:hover { transform: translateY(-2px) scale(1.03, .97); }
+.v3-team-card:hover { transform: translateY(-4px) scale(1.02); }
+button:not(:disabled):active, .button:active, .v3-team-card:active, .select-tile:active { animation: mallang-press .45s var(--ease-spring); }
+@keyframes mallang-press { 0% { transform: scale(1); } 25% { transform: scale(1.08, .86); } 50% { transform: scale(.95, 1.07); } 72% { transform: scale(1.03, .97); } 100% { transform: scale(1); } }
+
+/* 진입 파티클 */
+.particles { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+.particles span { position: absolute; bottom: 38%; opacity: 0; animation: particle-burst 1.6s cubic-bezier(.22, .8, .3, 1) forwards; }
+@keyframes particle-burst {
+  0% { opacity: 0; transform: translate(0, 0) scale(.3) rotate(0); }
+  15% { opacity: 1; transform: translate(calc(var(--dx) * .25), calc(var(--dy) * .35)) scale(1.15, .9) rotate(calc(var(--spin) * .2)); }
+  60% { opacity: .9; transform: translate(calc(var(--dx) * .8), var(--dy)) scale(.95, 1.05) rotate(calc(var(--spin) * .7)); }
+  100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 120px)) scale(.6) rotate(var(--spin)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):hover, .button:hover, .v3-team-card:hover { transform: none; }
+  button:not(:disabled):active, .button:active, .v3-team-card:active, .select-tile:active { animation: none; }
+  .particles { display: none; }
+}

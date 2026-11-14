@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import Link from "next/link";
 import type { Profile } from "@/lib/profile";
 import JoinForm from "@/components/join-form";
+import Particles from "@/components/particles";
 import { LeaderFlag, Mallang, PageHeader } from "@/components/mallang";
 
 type TeamProfile = Profile & { isHost?: boolean };
@@ -112,6 +113,7 @@ export default function RoomView({ id }: { id: string }) {
     .filter(({ profile }) => filters.length === 0 || filters.some((domain) => profile.domains.some((item) => item === domain)))
     .sort((a, b) => sharedCount(b.profile) - sharedCount(a.profile) || a.index - b.index);
   return <main className="container room-page">
+    <Particles />
     <PageHeader back={<Link className="back-link" href="/" aria-label="전체 조 보기">‹</Link>} title={room.name}
       sub={<>팀원 {profiles.length}명 · {questions.length ? "공통 주제 준비됨" : "주제 생성 전"} · <span className={`role-tag ${isHost ? "role-host" : "role-member"}`}>{isHost && <LeaderFlag />}{isHost ? "팀장 화면" : "팀원 화면"}</span></>} />
     {hostJustEntered && isHost && <p role="status" className="status" style={{ textAlign: "center" }}>{room.name} 팀장으로 접속했어요.</p>}

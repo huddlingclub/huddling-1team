@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+export const maxDuration = 60;
 import { createQuestions } from "@/lib/ai-server";
 import { access, allowedOrigin, database, getRoom, safeFailure, toProfile, type ProfileRow } from "@/lib/server";
 

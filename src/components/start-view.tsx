@@ -15,7 +15,8 @@ export default function StartView({ id }: { id: string }) {
         const [publicResponse, roomResponse] = await Promise.all([fetch(`/api/rooms/${id}/public`, { cache: "no-store" }), fetch(`/api/rooms/${id}`, { cache: "no-store" })]);
         if (roomResponse.ok) {
           const room = await roomResponse.json();
-          if (room.isHost || room.myProfileId) { router.replace(`/room/${id}`); return; }
+          const info = publicResponse.ok ? await publicResponse.clone().json() : null;
+          if (room.isHost || (room.myProfileId && info?.hostName)) { router.replace(`/room/${id}`); return; }
         }
         if (publicResponse.ok && active) setTeam(await publicResponse.json());
       } catch { /* API 준비 전에는 빈 상태 */ }
