@@ -18,7 +18,7 @@ export default function AdminLogin({ id }: { id: string }) {
     } catch (e) { setError(e instanceof Error ? e.message : "다시 시도해 주세요."); setBusy(false); }
   }
   return <div style={{ marginTop: 40 }}>
-    {!open ? <button type="button" onClick={() => setOpen(true)} style={{ padding: 0, background: "transparent", color: "#8c94a3", fontSize: 13, fontWeight: 400 }}>운영진이에요</button> :
+    {!open ? <button type="button" onClick={() => setOpen(true)} style={{ padding: 0, background: "transparent", color: "var(--color-text-secondary)", fontSize: 13, fontWeight: 400 }}>운영진이에요</button> :
       <form onSubmit={submit} className="stack">
         <label>아이디<input name="id" value={id} readOnly /></label>
         <label>비밀번호<input name="password" type="password" autoComplete="current-password" required /></label>
