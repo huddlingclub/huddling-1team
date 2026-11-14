@@ -95,3 +95,19 @@ input:not([type=checkbox]), select, textarea { border-radius: 14px; }
 .event-profile .character-avatar { width: 64px; height: 64px; margin-bottom: 12px; }
 .event-profile p { overflow-wrap: anywhere; }
 .event-team > a { display: inline-block; margin-top: 8px; font-weight: 700; }
+
+/* 운영진 표 */
+.admin-page { max-width: 900px; }
+.admin-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+.admin-header h1 { font-size: 25px; margin: 0; }
+.admin-button { min-height: 36px; padding: 7px 13px; border-radius: 8px; font-size: 13px; white-space: nowrap; }
+.admin-table-scroll { overflow-x: auto; }
+.admin-table, .admin-profiles { width: 100%; border-collapse: collapse; text-align: left; }
+.admin-table { min-width: 560px; background: white; }
+.admin-table th, .admin-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.admin-table th { color: var(--muted); font-size: 13px; }
+.admin-expand { min-height: 0; padding: 0; border-radius: 0; background: transparent; color: var(--ink); white-space: nowrap; }
+.admin-detail > td { background: #f6f8fc; }
+.admin-profiles th, .admin-profiles td { padding: 8px; }
+.admin-detail p { margin: 0; }
+.admin-toast { padding: 10px 14px; border-radius: 8px; background: #edf3ff; font-size: 14px; }
