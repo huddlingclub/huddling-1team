@@ -37,7 +37,7 @@ export function CharacterStage({ bubble, size = "M", children }: { bubble?: Reac
 
 /* 팀장 깃발 (Figma 21-2502) */
 export function LeaderFlag() {
-  return <img className="leader-flag" src="/mallang/leader-flag.png" alt="" width={16} height={16} />;
+  return <img className="leader-flag" src="/mallang/leader-flag.png" alt="" width={24} height={24} />;
 }
 
 /* 화면 머리 (Figma 21-1646 PageHeader) */

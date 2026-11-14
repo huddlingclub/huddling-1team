@@ -444,3 +444,31 @@ button:not(:disabled):active, .button:active, .v3-team-card:active, .select-tile
 @keyframes char-bob { 0%, 100% { transform: translateY(0) scale(1, 1); } 45% { transform: translateY(-5px) scale(.98, 1.02); } 80% { transform: translateY(0) scale(1.03, .97); } }
 @keyframes char-jelly { 0% { transform: scale(1, 1); } 25% { transform: scale(1.15, .85); } 50% { transform: scale(.92, 1.08); } 75% { transform: scale(1.04, .97); } 100% { transform: scale(1, 1); } }
 @media (prefers-reduced-motion: reduce) { .char-float, .select-tile:hover .char-float, .select-tile:has(input:checked) .char-float { animation: none !important; } }
+
+/* 조 카드 대표 캐릭터 */
+.v3-team-card { overflow: hidden; }
+.v3-team-card .team-char { position: absolute; right: 6px; bottom: 4px; width: 60px; height: 60px; object-fit: contain; mix-blend-mode: multiply; pointer-events: none; }
+.v3-team-card:nth-child(even) .team-char { animation-delay: -1.2s; }
+.v3-team-card:nth-child(3n) .team-char { animation-delay: -2.1s; }
+.v3-team-card:hover .team-char { animation: char-jelly .6s var(--ease-spring), char-bob 3s ease-in-out .6s infinite; }
+
+/* 주제 생성 중 로딩 */
+.generating-crew { display: flex; flex-direction: column; align-items: center; gap: var(--space-8); padding: var(--space-16) 0; }
+.generating-crew .crew { display: flex; gap: var(--space-8); }
+.generating-crew .crew img { width: 56px; height: 56px; object-fit: contain; mix-blend-mode: multiply; animation: crew-hop .9s var(--ease-spring) infinite; transform-origin: 50% 100%; }
+.crew-step { margin: 0; color: var(--color-primary); font-weight: 700; animation: crew-step-in .35s var(--ease-spring); display: inline-flex; align-items: baseline; gap: 2px; }
+.crew-dots i { display: inline-block; width: 4px; height: 4px; margin-left: 3px; border-radius: 50%; background: currentColor; animation: crew-dot 1s ease-in-out infinite; }
+.crew-dots i:nth-child(2) { animation-delay: .15s; } .crew-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes crew-hop { 0%, 100% { transform: translateY(0) scale(1.06, .94); } 35% { transform: translateY(-16px) scale(.95, 1.06); } 60% { transform: translateY(0) scale(1.08, .9); } 80% { transform: scale(.98, 1.02); } }
+@keyframes crew-step-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes crew-dot { 0%, 100% { opacity: .3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .v3-team-card .team-char, .generating-crew .crew img, .crew-step, .crew-dots i { animation: none !important; } }
+
+/* 팀장 깃발 크게 (도연 11/14) */
+.leader-flag { width: 24px; height: 24px; vertical-align: -6px; margin-right: 4px; transform-origin: 20% 90%; animation: flag-wave 2.4s ease-in-out infinite; }
+.v3-team-card .leader-flag { width: 22px; height: 22px; }
+.avatar-wrap { position: relative; flex: 0 0 auto; }
+.leader-badge { position: absolute; top: -10px; right: -12px; width: 36px; height: 36px; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .15)); transform-origin: 20% 90%; animation: flag-wave 2.4s ease-in-out infinite; }
+.person-card.is-leader { border-color: var(--color-primary) !important; box-shadow: 0 6px 18px rgba(31, 111, 229, .12); }
+@keyframes flag-wave { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-8deg) scale(1.05); } 60% { transform: rotate(5deg); } }
+@media (prefers-reduced-motion: reduce) { .leader-flag, .leader-badge { animation: none !important; } }

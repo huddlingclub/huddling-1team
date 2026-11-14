@@ -5,7 +5,8 @@ import Link from "next/link";
 import type { Profile } from "@/lib/profile";
 import JoinForm from "@/components/join-form";
 import Particles from "@/components/particles";
-import { LeaderFlag, Mallang, PageHeader } from "@/components/mallang";
+import Generating from "@/components/generating";
+import { LeaderFlag, PageHeader } from "@/components/mallang";
 
 type TeamProfile = Profile & { isHost?: boolean };
 type RoomData = { room: { id: string; name: string; phase: string }; profiles: TeamProfile[]; myProfileId: string | null;
@@ -120,7 +121,7 @@ export default function RoomView({ id }: { id: string }) {
     <div className="room-layout"><div className="stack">
     {isHost && <section className="panel leader-card rise"><div className="leader-card-head"><span className="role-tag role-host"><LeaderFlag />팀장</span><span className="status">팀장에게만 보여요</span></div>
       <h2>이 팀원 프로필로 공통 주제를 생성할까요?</h2>
-      {(busy || room.phase === "generating") ? <div className="generating" role="status"><Mallang size="S" />생성 중...</div>
+      {(busy || room.phase === "generating") ? <Generating />
         : <button disabled={profiles.length === 0} onClick={generate}>{questions.length ? "공통 주제 다시 생성하기" : "공통 주제 생성하기"}</button>}
       {error && <p className="error" role="alert">{error}</p>}
     </section>}
@@ -136,8 +137,8 @@ export default function RoomView({ id }: { id: string }) {
       <p className="status">나와 관심 분야가 같은 사람 {sharedPeople}명</p>
       {domains.length > 0 && <div className="chips v3-filters" aria-label="관심 분야 필터"><button type="button" className={`filter-chip ${filters.length === 0 ? "selected" : ""}`} aria-pressed={filters.length === 0} onClick={() => setFilters([])}>전체</button>
         {domains.map((domain) => <button type="button" key={domain} className={`filter-chip ${filters.includes(domain) ? "selected" : ""}`} aria-pressed={filters.includes(domain)} onClick={() => setFilters((current) => current.includes(domain) ? current.filter((item) => item !== domain) : [...current, domain])}>{domain}</button>)}</div>}
-      {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : shownProfiles.length === 0 ? <p className="muted">선택한 분야의 팀원이 없어요.</p> : <div className="profiles">{shownProfiles.map(({ profile }) => <article className="profile person-card" key={profile.id} ref={(el) => { if (el) cardRefs.current.set(profile.id, el); else cardRefs.current.delete(profile.id); }}>
-        <div className="character-avatar" aria-hidden="true">{occupationChar(profile.occupation) ? <img className="char-float" src={occupationChar(profile.occupation)!} alt="" decoding="async" /> : <span>{profile.occupation.slice(0, 1)}</span>}</div>
+      {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : shownProfiles.length === 0 ? <p className="muted">선택한 분야의 팀원이 없어요.</p> : <div className="profiles">{shownProfiles.map(({ profile }) => <article className={`profile person-card${profile.isHost ? " is-leader" : ""}`} key={profile.id} ref={(el) => { if (el) cardRefs.current.set(profile.id, el); else cardRefs.current.delete(profile.id); }}>
+        <div className="avatar-wrap"><div className="character-avatar" aria-hidden="true">{occupationChar(profile.occupation) ? <img className="char-float" src={occupationChar(profile.occupation)!} alt="" decoding="async" /> : <span>{profile.occupation.slice(0, 1)}</span>}</div>{profile.isHost && <img className="leader-badge" src="/mallang/leader-flag.png" alt="팀장" />}</div>
         <div className="person-details">
         <h3>{profile.name} <span className={`role-tag ${profile.isHost ? "role-host" : "role-member"}`}>{profile.isHost && <LeaderFlag />}{profile.isHost ? "팀장" : "팀원"}</span> {profile.id === myProfileId && <span className="tag">나</span>}</h3>
         <div className="status">{profile.occupation} · {profile.experience}</div><p>{profile.introduction}</p>
