@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { domainOptions, experienceLevels, occupations } from "@/lib/profile";
 import Link from "next/link";
+import LeaderFlag from "@/components/leader-flag";
 
 const characters: Record<string, string> = { 개발: "developer", 디자인: "designer", 기획: "planner", 마케팅: "marketer", "대표·창업자": "ceo" };
 
@@ -67,7 +68,7 @@ export default function JoinForm({ id, onComplete, host = false }: { id?: string
   }
   const content = <>
     {id && !onComplete && <Link href={`/room/${id}/start`} aria-label="역할 선택으로">←</Link>}
-    <div className={`role-tag ${host ? "role-host" : "role-member"}`}>{room && room !== "행사" ? room + " " : ""}{host ? "팀장" : "팀원"}</div>
+    <div className={`role-tag ${host ? "role-host" : "role-member"}`}>{host && <LeaderFlag />}{room && room !== "행사" ? room + " " : ""}{host ? "팀장" : "팀원"}</div>
     <h1>나를 소개해<br />주세요</h1>
     <p className="muted">{room === "행사" ? "참여할 조를 선택해 주세요." : room ? room + " 조원들에게 보일 프로필이에요." : "팀 정보를 확인하고 있어요."}</p>
     <div className="v3-role-preview"><div className="character-avatar" aria-hidden="true">{characters[occupation] ? <img src={`/characters/${characters[occupation]}.png`} alt="" /> : <span>{occupation.slice(0, 1) || "?"}</span>}</div><div><strong>{occupation ? occupation + " 캐릭터" : "나의 캐릭터"}</strong><p className="status">직군을 고르면 캐릭터가 바뀌어요</p></div></div>

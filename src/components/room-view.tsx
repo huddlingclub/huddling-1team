@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Profile } from "@/lib/profile";
 import JoinForm from "@/components/join-form";
+import LeaderFlag from "@/components/leader-flag";
 
 type TeamProfile = Profile & { isHost?: boolean };
 type RoomData = { room: { id: string; name: string; phase: string }; profiles: TeamProfile[]; myProfileId: string | null;
@@ -96,7 +97,7 @@ export default function RoomView({ id }: { id: string }) {
     .filter(({ profile }) => filters.length === 0 || filters.some((domain) => profile.domains.some((item) => item === domain)))
     .sort((a, b) => sharedCount(b.profile) - sharedCount(a.profile) || a.index - b.index);
   return <main className="container">
-    <div className={`role-tag ${isHost ? "role-host" : "role-member"}`}>{isHost ? "팀장 화면" : "팀원 화면"} · {room.name}</div>
+    <div className={`role-tag ${isHost ? "role-host" : "role-member"}`}>{isHost && <LeaderFlag />}{isHost ? "팀장 화면" : "팀원 화면"} · {room.name}</div>
     {hostJustEntered && isHost && <p role="status">{room.name} 팀장으로 접속했어요.</p>}
     <Link href="/" className="status">← 전체 조 보기</Link>
     <div className="eyebrow" style={{ marginTop: 18 }}>우리 조</div>
@@ -122,7 +123,7 @@ export default function RoomView({ id }: { id: string }) {
       {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : shownProfiles.length === 0 ? <p className="muted">선택한 분야의 팀원이 없어요.</p> : <div className="profiles">{shownProfiles.map(({ profile }) => <article className="profile person-card" key={profile.id}>
         <div className="character-avatar" aria-hidden="true">{characters[profile.occupation] ? <img src={`/characters/${characters[profile.occupation]}.png`} alt="" /> : <span>{profile.occupation.slice(0, 1)}</span>}</div>
         <div className="person-details">
-        <h3>{profile.name} <span className={`role-tag ${profile.isHost ? "role-host" : "role-member"}`}>{profile.isHost ? "팀장" : "팀원"}</span> {profile.id === myProfileId && <span className="tag">나</span>}</h3>
+        <h3>{profile.name} <span className={`role-tag ${profile.isHost ? "role-host" : "role-member"}`}>{profile.isHost && <LeaderFlag />}{profile.isHost ? "팀장" : "팀원"}</span> {profile.id === myProfileId && <span className="tag">나</span>}</h3>
         <div className="status">{profile.occupation} · {profile.experience}</div><p>{profile.introduction}</p>
         <div>{profile.domains.map((tag) => <span className={`tag ${myDomains.includes(tag) && profile.id !== myProfileId ? "shared-domain" : ""}`} key={tag}>{tag}</span>)}</div>
         {profile.socialUrl && <p><a href={profile.socialUrl} target="_blank" rel="noopener noreferrer">SNS 보기 ↗</a></p>}

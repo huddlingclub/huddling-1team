@@ -2,6 +2,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import LeaderFlag from "@/components/leader-flag";
 
 type Team = { id: string; number: number; name: string; count: number; hostName: string | null };
 export default function TeamsHome({ adminLogin }: { adminLogin: ReactNode }) {
@@ -21,7 +22,7 @@ export default function TeamsHome({ adminLogin }: { adminLogin: ReactNode }) {
     {eventName && <p className="status">{eventName}</p>}
     <h1>우리 조를<br />찾아볼까요?</h1><p className="muted">우리 조 카드를 눌러 시작하세요.</p>
     <div className="v3-team-grid">{teams.map((team) => <Link className={`v3-team-card team-color-${(team.number - 1) % 5}`} href={`/room/${team.id}/start`} key={team.id}>
-      <strong>{team.name}</strong><span>팀원 {team.count}명</span><span className={team.hostName ? "team-status has-host" : "team-status"}>{team.hostName ? "팀장 있음" : "팀장 없음"}</span>
+      <strong>{team.name}</strong><span>팀원 {team.count}명</span><span className={team.hostName ? "team-status has-host" : "team-status"}>{team.hostName && <LeaderFlag />}{team.hostName ? "팀장 있음" : "팀장 없음"}</span>
     </Link>)}</div>
     {adminLogin}
   </main>;
