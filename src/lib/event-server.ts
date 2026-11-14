@@ -1,15 +1,32 @@
 import "server-only";
 import type { NextRequest } from "next/server";
-import { cookieName, database, hashToken, isUuid, validHost, validInvite, type RoomRow } from "./server";
+import { cookieName, database, hashToken, validHost, validInvite, type RoomRow } from "./server";
 
-export function roomCookieIds(request: NextRequest) {
-  return request.cookies.getAll().flatMap(({ name }) => {
-    const match = /^ice_(?:room|host)_([a-f0-9]{32})$/.exec(name);
-    if (!match) return [];
-    const value = match[1];
-    const id = `${value.slice(0, 8)}-${value.slice(8, 12)}-${value.slice(12, 16)}-${value.slice(16, 20)}-${value.slice(20)}`;
-    return isUuid(id) ? [id] : [];
-  });
+export const eventName = "허들링 아이스브레이커";
+
+export function currentEventToken() {
+  const token = process.env.HUDDLING_EVENT_TOKEN || "";
+  return /^[A-Za-z0-9_-]{43}$/.test(token) ? token : null;
+}
+
+export function isCurrentEventRoom(room: RoomRow) {
+  const token = currentEventToken();
+  return !!token && room.team_number != null && room.team_number >= 1 && room.team_number <= 15
+    && room.invite_hash === hashToken(token);
+}
+
+export async function currentEventRooms(db: ReturnType<typeof database>) {
+  const token = currentEventToken();
+  if (!token) throw new Error("event_not_configured");
+  const { data, error } = await db.from("ice_rooms").select("id,name,team_number,host_name,invite_hash,host_hash")
+    .eq("invite_hash", hashToken(token)).gte("team_number", 1).lte("team_number", 15).order("team_number");
+  if (error) throw error;
+  return (data || []) as RoomRow[];
+}
+
+export async function myRoomId(request: NextRequest, rooms: RoomRow[], db: ReturnType<typeof database>) {
+  const mine = await findMyProfile(request, rooms.map((room) => room.id), db);
+  return mine?.room_id || rooms.find((room) => hasRoomCookie(request, room))?.id || null;
 }
 
 export function hasRoomCookie(request: NextRequest, room: RoomRow) {
