@@ -131,3 +131,13 @@
 - 확인: 타입·빌드와 모바일 화면, 키보드 포커스 및 reduced-motion 스타일. 별도 검수는 Claude 담당이다.
 - 도연 제공 캐릭터 5개를 첫 화면과 직군별 프로필에 사용하고, 조 카드·주제 카드·버튼·모바일 폭을 파스텔 톤으로 바꿨다. 투자·기타는 이니셜을 표시한다. 기능 코드는 유지했다.
 - 타입 검사·빌드 통과, 로컬 첫 화면과 이미지 5개 HTTP 200 확인. 키보드 포커스와 reduced-motion CSS를 유지했다. 브라우저 자동화 연결 불가로 모바일 실화면과 키보드 조작은 미검증이다. Claude 별도 검수 대기.
+
+## 2026-11-14: 참가자 API v2 구현 계획
+- 감독 지시서와 api-contract.md 기준으로 backend-v2에서 S1~S5 서버 기능만 구현한다. 상세 계획은 로컬 임시 backend-v2-plan.md에 기록했다.
+- 범위: 참가자 API·서버 공통 모듈·비파괴 마이그레이션·API 테스트·README API 절. 기존 ice_* 테이블·쿠키 인증·analysis 처리를 재사용한다. UI·CSS·패키지·관리자 기능은 수정하지 않는다.
+- 검증: 접근 제어·행사 분리·정렬·중복 제출·주제 시각 API 테스트, npm test/typecheck/build. GPT 실호출 없음. 감독 Claude 별도 검수 대기.
+- 개인 GBrain status/search는 ssh_unavailable로 실패했다. 기존 기록을 가져오거나 인증을 변경하지 않았다.
+- 구현: 행사 전체 카드 GET·팀장 현황 GET·topics POST 별칭을 추가했다. 기존 조 조회에 profileCount·generatedAt, 중복 제출 409에 기존 roomId를 추가했다.
+- 새 파일: event-server.ts는 행사 안의 본인 카드 확인을 공유하고, 신규 라우트는 확정 경로를 제공한다. 비파괴 SQL은 마지막 생성 성공 시각을 저장하며, API 테스트와 vitest 별칭 설정은 실제 인증·라우트 동작 확인에 필요하다.
+- 검증: API 19건과 기존 5건, 타입 검사·프로덕션 빌드 통과. 테스트 DB 전송과 AI 생성은 모의 처리했다. 실제 DB 적용·GPT 실호출은 하지 않았다.
+- 필수 후속: 배포 전 202611140005_topic_generated_at.sql 적용. 감독 Claude의 별도 검수 대기. 최신 main 반영 후 재검증·backend-v2 push를 진행한다.

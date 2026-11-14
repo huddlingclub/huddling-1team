@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { profileInputSchema } from "@/lib/profile";
+import { findMyProfile } from "@/lib/event-server";
 import { access, allowedOrigin, cookieName, database, getRoom, hashToken, newToken, safeFailure, setCookie } from "@/lib/server";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -8,15 +9,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const { id } = await params;
     const room = await getRoom(id);
     if (!room || !access(request, room).canView) return NextResponse.json({ error: "초대 링크가 필요해요." }, { status: 403 });
+    const db = database();
+    let roomIds = [id];
+    if (room.team_number != null) {
+      const { data, error } = await db.from("ice_rooms").select("id").eq("invite_hash", room.invite_hash).not("team_number", "is", null);
+      if (error) return safeFailure();
+      roomIds = (data || []).map((item) => item.id);
+    }
+    const existing = await findMyProfile(request, roomIds, db);
+    if (existing) return NextResponse.json({ error: "이 기기에서 이미 카드를 작성했어요.", roomId: existing.room_id }, { status: 409 });
     const input = profileInputSchema.safeParse(await request.json());
     if (!input.success) return NextResponse.json({ error: input.error.issues[0]?.message || "입력 내용을 확인해 주세요." }, { status: 400 });
-    const db = database();
-    const existingToken = request.cookies.get(cookieName("profile", id))?.value;
-    if (existingToken && /^[A-Za-z0-9_-]{43}$/.test(existingToken)) {
-      const { data: existing, error } = await db.from("ice_profiles").select("id").eq("room_id", id).eq("token_hash", hashToken(existingToken)).maybeSingle();
-      if (error) return safeFailure();
-      if (existing) return NextResponse.json({ error: "이 기기에서 이미 카드를 작성했어요." }, { status: 409 });
-    }
     const token = newToken();
     const { data: profileId, error } = await db.rpc("ice_join_profile", {
       p_room: id, p_token_hash: hashToken(token), p_name: input.data.name, p_occupation: input.data.occupation,

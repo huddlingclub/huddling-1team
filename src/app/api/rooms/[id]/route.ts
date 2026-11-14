@@ -23,6 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       myProfileId = data?.id || null;
     }
     return NextResponse.json({ room: { id: room.id, name: room.name, phase: room.phase }, profiles, myProfileId, isHost,
+      profileCount: profiles.length, generatedAt: room.topics_generated_at,
       questions: (questionResult.data || []).map((item) => ({ id: item.id, text: item.text })),
       source: questionResult.data?.[0]?.source || null }, { headers: { "Cache-Control": "no-store" } });
   } catch { return safeFailure(); }

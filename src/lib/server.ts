@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import type { Profile } from "./profile";
 
-export type RoomRow = { id: string; name: string; invite_hash: string; host_hash: string; phase: "collecting" | "generating" | "voting" | "finished"; team_number?: number | null };
+export type RoomRow = { id: string; name: string; invite_hash: string; host_hash: string; phase: "collecting" | "generating" | "voting" | "finished"; team_number?: number | null; topics_generated_at: string | null };
 export type ProfileRow = {
   id: string; room_id: string; name: string; occupation: Profile["occupation"];
   experience: Profile["experience"]; domains: Profile["domains"]; introduction: string; social_url: string;
@@ -50,7 +50,7 @@ export function toProfile(row: ProfileRow): Profile {
 export async function getRoom(roomId: string): Promise<RoomRow | null> {
   if (!isUuid(roomId)) return null;
   const { data, error } = await database().from("ice_rooms")
-    .select("id,name,invite_hash,host_hash,phase,team_number").eq("id", roomId).maybeSingle();
+    .select("id,name,invite_hash,host_hash,phase,team_number,topics_generated_at").eq("id", roomId).maybeSingle();
   if (error) throw error;
   return data as RoomRow | null;
 }

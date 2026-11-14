@@ -23,6 +23,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       p_room: id, p_generation: generation, p_questions: result.questions, p_source: result.source,
     });
     if (saveError || !finished) return safeFailure();
-    return NextResponse.json({ source: result.source });
+    const { data: savedRoom, error: savedError } = await db.from("ice_rooms").select("topics_generated_at").eq("id", id).single();
+    if (savedError || !savedRoom) return safeFailure();
+    return NextResponse.json({ source: result.source, generatedAt: savedRoom.topics_generated_at });
   } catch { return safeFailure(); }
 }
