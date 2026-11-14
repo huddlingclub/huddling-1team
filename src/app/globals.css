@@ -486,3 +486,5 @@ button:not(:disabled):active, .button:active, .v3-team-card:active, .select-tile
 .shared-count { color: var(--color-primary); }
 .person-card.is-me { background: var(--color-primary-subtle) !important; }
 @media (prefers-reduced-motion: reduce) { .pulse-cta, .shared-badge { animation: none !important; } }
+.start-char { width: 120px; height: 120px; object-fit: contain; mix-blend-mode: multiply; display: block; margin: 0 auto var(--space-8); }
+.host-cta { border-color: var(--color-primary) !important; color: var(--color-primary) !important; }

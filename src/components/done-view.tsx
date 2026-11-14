@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Profile } from "@/lib/profile";
 import { CharacterStage } from "@/components/mallang";
+import Particles from "@/components/particles";
 
 export default function DoneView({ id }: { id: string }) {
   const [room, setRoom] = useState("");
@@ -17,6 +18,7 @@ export default function DoneView({ id }: { id: string }) {
     }).catch(() => {});
   }, [id]);
   return <main className="container narrow v3-done">
+    <Particles count={36} />
     <div className="rise"><CharacterStage bubble="반가워요! 등록 완료!" /></div>
     <h1 className="rise" style={{ ["--i" as string]: 1, color: "var(--color-primary)" }}>{room ? `${room}에 합류했어요!` : "카드가 등록됐어요!"}</h1>
     <p className="muted">조 페이지에서 팀원 프로필과<br />공통 주제를 볼 수 있어요.</p>
