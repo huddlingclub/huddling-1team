@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import type { Profile } from "./profile";
 
-export type RoomRow = { id: string; name: string; invite_hash: string; host_hash: string; phase: "collecting" | "generating" | "voting" | "finished" };
+export type RoomRow = { id: string; name: string; invite_hash: string; host_hash: string; phase: "collecting" | "generating" | "voting" | "finished"; team_number?: number | null };
 export type ProfileRow = {
   id: string; room_id: string; name: string; occupation: Profile["occupation"];
   experience: Profile["experience"]; domains: Profile["domains"]; introduction: string; social_url: string;
@@ -50,16 +50,18 @@ export function toProfile(row: ProfileRow): Profile {
 export async function getRoom(roomId: string): Promise<RoomRow | null> {
   if (!isUuid(roomId)) return null;
   const { data, error } = await database().from("ice_rooms")
-    .select("id,name,invite_hash,host_hash,phase").eq("id", roomId).maybeSingle();
+    .select("id,name,invite_hash,host_hash,phase,team_number").eq("id", roomId).maybeSingle();
   if (error) throw error;
   return data as RoomRow | null;
 }
 export function access(request: NextRequest, room: RoomRow) {
   const isHost = matchesToken(request.cookies.get(cookieName("host", room.id))?.value, room.host_hash);
-  const canView = isHost || matchesToken(request.cookies.get(cookieName("room", room.id))?.value, room.invite_hash);
+  const canView = isHost || matchesToken(request.cookies.get(cookieName("room", room.id))?.value, room.invite_hash)
+    || (room.team_number != null && matchesToken(request.cookies.get("ice_event")?.value, room.invite_hash));
   return { isHost, canView };
 }
 export function validInvite(value: string | undefined, room: RoomRow) { return matchesToken(value, room.invite_hash); }
+export function validHost(value: string | undefined, room: RoomRow) { return matchesToken(value, room.host_hash); }
 export function safeFailure() {
   return NextResponse.json({ error: "요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요." }, { status: 503 });
 }

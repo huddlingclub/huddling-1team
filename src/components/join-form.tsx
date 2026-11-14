@@ -3,13 +3,19 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { domainOptions, experienceLevels, occupations } from "@/lib/profile";
 
-export default function JoinForm({ id }: { id: string }) {
+export default function JoinForm({ id }: { id?: string }) {
   const router = useRouter();
   const [intro, setIntro] = useState("");
   const [busy, setBusy] = useState(false);
   const [room, setRoom] = useState("");
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
   const [error, setError] = useState("");
   useEffect(() => {
+    if (!id) {
+      fetch("/api/event").then(async (res) => { const data = await res.json(); if (!res.ok) throw new Error(data.error); setTeams(data.teams); setRoom("행사"); })
+        .catch((e) => setError(e.message || "행사를 불러오지 못했어요."));
+      return;
+    }
     async function enter() {
       const token = window.location.hash.slice(1);
       if (token) {
@@ -25,15 +31,16 @@ export default function JoinForm({ id }: { id: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       if (data.myProfileId) { router.replace("/room/" + id); return; }
-      if (data.room.phase !== "collecting") { setError("이미 질문이 생성되어 참여가 마감됐어요."); return; }
       setRoom(data.room.name);
     }).catch((e) => setError(e.message || "방을 불러오지 못했어요."));
   }, [id, router]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError("");
     const form = new FormData(event.currentTarget);
+    const targetId = id || String(form.get("teamId") || "");
+    if (!targetId) { setError("참여할 조를 선택해 주세요."); setBusy(false); return; }
     try {
-      const res = await fetch("/api/rooms/" + id + "/profiles", {
+      const res = await fetch("/api/rooms/" + targetId + "/profiles", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
           name: form.get("name"), occupation: form.get("occupation"), experience: form.get("experience"),
           domains: form.getAll("domains"), introduction: form.get("introduction"),
@@ -42,14 +49,15 @@ export default function JoinForm({ id }: { id: string }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      router.push("/room/" + id);
+      router.push("/room/" + targetId);
     } catch (e) { setError(e instanceof Error ? e.message : "다시 시도해 주세요."); setBusy(false); }
   }
   return <main className="container narrow">
     <div className="eyebrow">내 프로필 만들기</div>
     <h1>반가워요!<br />나를 소개해 주세요.</h1>
-    <p className="muted">{room ? room + " 팀에 참여하고 있어요." : "팀 정보를 확인하고 있어요."}</p>
+    <p className="muted">{room === "행사" ? "참여할 조를 선택해 주세요." : room ? room + " 팀에 참여하고 있어요." : "팀 정보를 확인하고 있어요."}</p>
     <form onSubmit={submit} className="panel stack">
+      {!id && <label>참여할 조<select name="teamId" defaultValue="" required><option value="" disabled>조를 선택해 주세요</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>}
       <label>이름<input name="name" maxLength={40} placeholder="이름을 입력해 주세요" required /></label>
       <label>직군<select name="occupation" defaultValue="" required><option value="" disabled>직군을 선택해 주세요</option>{occupations.map((item) => <option key={item}>{item}</option>)}</select></label>
       <label>연차<select name="experience" defaultValue="" required><option value="" disabled>연차를 선택해 주세요</option>{experienceLevels.map((item) => <option key={item}>{item}</option>)}</select></label>
