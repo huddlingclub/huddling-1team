@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { profileInputSchema } from "@/lib/profile";
-import { findMyProfile } from "@/lib/event-server";
-import { access, allowedOrigin, cookieName, database, getRoom, hashToken, newToken, safeFailure, setCookie } from "@/lib/server";
+import { currentEventToken, findMyProfile, isCurrentEventRoom } from "@/lib/event-server";
+import { allowedOrigin, cookieName, database, getRoom, hashToken, newToken, safeFailure, setCookie } from "@/lib/server";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!allowedOrigin(request)) return NextResponse.json({ error: "요청 출처를 확인해 주세요." }, { status: 403 });
   try {
+    const eventToken = currentEventToken();
+    if (!eventToken) return safeFailure();
     const { id } = await params;
     const room = await getRoom(id);
-    if (!room || !access(request, room).canView) return NextResponse.json({ error: "초대 링크가 필요해요." }, { status: 403 });
+    if (!room || !isCurrentEventRoom(room)) return NextResponse.json({ error: "조를 찾을 수 없어요." }, { status: 404 });
     const db = database();
     let roomIds = [id];
     if (room.team_number != null) {
-      const { data, error } = await db.from("ice_rooms").select("id").eq("invite_hash", room.invite_hash).not("team_number", "is", null);
+      const { data, error } = await db.from("ice_rooms").select("id").eq("invite_hash", room.invite_hash)
+        .gte("team_number", 1).lte("team_number", 15);
       if (error) return safeFailure();
       roomIds = (data || []).map((item) => item.id);
     }
@@ -28,6 +31,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (error || !profileId) return NextResponse.json({ error: "참여가 마감됐거나 정원이 찼어요." }, { status: 409 });
     const response = NextResponse.json({ id: profileId });
     setCookie(response, cookieName("profile", id), token);
+    setCookie(response, cookieName("room", id), eventToken);
     return response;
   } catch { return safeFailure(); }
 }

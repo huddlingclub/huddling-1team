@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { cookieName, hashToken } from "../../lib/server";
+import { GET as teamsGET } from "./teams/route";
+import { GET as publicGET } from "./rooms/[id]/public/route";
+import { POST as hostPOST } from "./host-claim/route";
 import { GET as eventGET } from "./events/current/route";
 import { GET as roomGET } from "./rooms/[id]/route";
 import { GET as leaderGET } from "./rooms/[id]/leader/route";
@@ -27,8 +30,11 @@ class Query {
   ordering: string[] = [];
   fields = "";
   one = false;
+  updateValues: Row | undefined;
   constructor(readonly table: string) {}
-  select(fields: string) { this.fields = fields; return this; }
+  select(fields: string, _options?: { count?: string; head?: boolean }) { this.fields = fields; return this; }
+  update(values: Row) { this.updateValues = values; return this; }
+  is(key: string, value: unknown) { return this.eq(key, value); }
   eq(key: string, value: unknown) { this.filters.push((row) => row[key] === value); return this; }
   in(key: string, values: unknown[]) { this.filters.push((row) => values.includes(row[key])); return this; }
   not(key: string, _operator: string, value: unknown) { this.filters.push((row) => row[key] !== value); return this; }
@@ -39,21 +45,37 @@ class Query {
   limit(_n: number) { return this; }
   single() { this.one = true; return this; }
   maybeSingle() { this.one = true; return this; }
-  then(resolve: (value: { data: unknown; error: unknown }) => unknown) {
+  then(resolve: (value: { data: unknown; error: unknown; count: number }) => unknown) {
     const rows = (tables[this.table] || []).filter((row) => this.filters.every((filter) => filter(row))).sort((a, b) => {
       for (const key of this.ordering) {
         if (a[key] === b[key]) continue;
         return a[key]! < b[key]! ? -1 : 1;
       }
       return 0;
-    }).map((row) => Object.fromEntries(this.fields.split(",").map((key) => [key, row[key]])));
-    return Promise.resolve({ data: this.one ? rows[0] || null : rows, error: failedTable === this.table ? { message: "unavailable" } : null }).then(resolve);
+    }).map((row) => {
+      if (this.updateValues) Object.assign(row, this.updateValues);
+      return Object.fromEntries(this.fields.split(",").map((key) => [key, row[key]]));
+    });
+    return Promise.resolve({ data: this.one ? rows[0] || null : rows, error: failedTable === this.table ? { message: "unavailable" } : null, count: rows.length }).then(resolve);
   }
 }
 const db = {
   from: (table: string) => new Query(table),
   rpc: vi.fn(async (name: string, args: Record<string, unknown>) => {
-    if (name === "ice_join_profile") return { data: "new-profile", error: null };
+    if (name === "ice_claim_host_profile") {
+      const target = tables.ice_rooms.find((row) => row.id === args.p_room && row.invite_hash === args.p_event_hash && row.host_name === null);
+      if (!target) return { data: null, error: null };
+    }
+    if (name === "ice_join_profile" || name === "ice_claim_host_profile") {
+      tables.ice_profiles.push({ id: "new-profile", room_id: String(args.p_room), token_hash: String(args.p_token_hash),
+        name: String(args.p_name), occupation: String(args.p_occupation), experience: String(args.p_experience),
+        domains: args.p_domains as string[], introduction: String(args.p_introduction), social_url: String(args.p_social_url), created_at: newTime });
+      if (name === "ice_claim_host_profile") {
+        Object.assign(tables.ice_rooms.find((row) => row.id === args.p_room)!, {
+          host_name: args.p_name, host_hash: args.p_host_hash, host_profile_id: "new-profile" });
+      }
+      return { data: "new-profile", error: null };
+    }
     if (name === "ice_begin_questions") return { data: "generation", error: null };
     if (saveFails) return { data: false, error: null };
     const room = tables.ice_rooms.find((row) => row.id === args.p_room)!;
@@ -69,7 +91,7 @@ function request(path: string, cookies: Record<string, string> = {}, body?: unkn
     ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
 }
 function room(id: string, number: number | null, token = eventToken): Row {
-  return { id, name: `${number}조`, team_number: number, invite_hash: hashToken(token), host_hash: hashToken(hostToken), phase: "collecting", topics_generated_at: oldTime };
+  return { id, name: `${number}조`, team_number: number, invite_hash: hashToken(token), host_hash: hashToken(hostToken), phase: "collecting", host_name: number === 1 ? "팀장" : null, host_profile_id: number === 1 ? "mine" : null, topics_generated_at: oldTime };
 }
 function profile(id: string, roomId: string, createdAt: string, token = profileToken): Row {
   return { id, room_id: roomId, name: id, occupation: "개발", experience: "2~4년", domains: ["AI"], introduction: "백엔드 개발",
@@ -87,9 +109,11 @@ beforeEach(() => {
 });
 
 describe("행사 전체 카드", () => {
-  it("초대가 없거나 쿠키가 위조되면 차단한다", async () => {
+  it("초대가 없거나 잘못된 행사 쿠키가 있어도 서버 행사만 공개한다", async () => {
     for (const cookies of [{}, { ice_event: "bad" }, { ice_event: "x".repeat(43) }, { [cookieName("room", r1)]: "x".repeat(43) }]) {
-      expect((await eventGET(request("/api/events/current", cookies))).status).toBe(403);
+      const response = await eventGET(request("/api/events/current", cookies));
+      expect(response.status).toBe(200);
+      expect((await response.json()).teams.map((team: { id: string }) => team.id)).toEqual([r1, r2]);
     }
   });
   it("조·카드를 정렬하고 행사 밖 카드와 민감 필드를 제외한다", async () => {
@@ -131,12 +155,21 @@ describe("제출·조 정보", () => {
     const response = await profilePOST(request(`/api/rooms/${r1}/profiles`, { ice_event: eventToken, [cookieName("profile", r1)]: profileToken }, profileInput), params());
     expect(response.status).toBe(409); expect((await response.json()).roomId).toBe(r1);
   });
-  it("다른 행사 제출 기록은 새 카드 등록을 막지 않는다", async () => {
+  it("다른 행사 쿠키가 있어도 행사 밖 공개 등록은 404다", async () => {
     const response = await profilePOST(request(`/api/rooms/${r3}/profiles`, { ice_event: otherEventToken, [cookieName("profile", r1)]: profileToken }, profileInput), params(r3));
-    expect(response.status).toBe(200); expect(response.cookies.get(cookieName("profile", r3))).toBeDefined();
+    expect(response.status).toBe(404); expect(db.rpc).not.toHaveBeenCalled();
   });
-  it("인증 없는 등록과 잘못된 입력을 차단한다", async () => {
-    expect((await profilePOST(request("/profiles", {}, profileInput), params())).status).toBe(403);
+  it("쿠키 없이 등록하고 profile·room 쿠키를 발급하며 재제출은 409다", async () => {
+    const response = await profilePOST(request("/profiles", {}, profileInput), params());
+    expect(response.status).toBe(200);
+    const token = response.cookies.get(cookieName("profile", r1))?.value;
+    expect(token).toBeTruthy(); expect(response.cookies.get(cookieName("room", r1))?.value).toBe(eventToken);
+    expect(response.cookies.get(cookieName("profile", r1))?.httpOnly).toBe(true);
+    const duplicate = await profilePOST(request("/profiles", { [cookieName("profile", r1)]: token! }, profileInput), params(r2));
+    expect(duplicate.status).toBe(409); expect((await duplicate.json()).roomId).toBe(r1);
+  });
+  it("잘못된 입력과 외부 출처의 등록을 차단한다", async () => {
+    expect((await profilePOST(request("/profiles", {}, profileInput, "https://example.com"), params())).status).toBe(403);
     expect((await profilePOST(request("/profiles", { ice_event: eventToken }, {}), params())).status).toBe(400);
   });
   it("조 인원·생성 시각·본인 카드와 기존 주제를 함께 반환한다", async () => {
@@ -183,4 +216,82 @@ describe("팀장 현황·주제 생성", () => {
     expect((await topicsPOST(request("/topics", { [cookieName("host", r1)]: hostToken }, {}), params())).status).toBe(503);
     expect(tables.ice_rooms.find((row) => row.id === r1)!.topics_generated_at).toBe(oldTime);
   });
+});
+
+
+describe("v3 공개 API 계약", () => {
+  it("공개 teams는 정렬한 요약과 hostName·count만 정확히 반환한다", async () => {
+    const response = await teamsGET(request("/api/teams"));
+    expect(response.status).toBe(200); expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toEqual({ event: { name: "허들링 아이스브레이커" }, myRoomId: null,
+      teams: [{ id: r1, number: 1, name: "1조", count: 2, hostName: "팀장" }, { id: r2, number: 2, name: "2조", count: 0, hostName: null }] });
+  });
+  it("공개 teams도 본인 카드 쿠키로 내 조를 찾고 다른 행사 쿠키는 무시한다", async () => {
+    const data = await (await teamsGET(request("/api/teams", { ice_event: otherEventToken, [cookieName("profile", r1)]: profileToken }))).json();
+    expect(data.myRoomId).toBe(r1); expect(data.teams.map((team: { id: string }) => team.id)).toEqual([r1, r2]);
+  });
+  it("공개 조 메타데이터는 정확한 계약 응답을 반환한다", async () => {
+    const response = await publicGET(request("/public"), params());
+    expect(response.status).toBe(200); expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toEqual({ id: r1, number: 1, name: "1조", count: 2, hostName: "팀장" });
+  });
+  it("공개 조는 다른 행사·독립 조·잘못된 id를 404로 처리한다", async () => {
+    expect((await publicGET(request("/public"), params(r3))).status).toBe(404);
+    expect((await publicGET(request("/public"), params("invalid"))).status).toBe(404);
+    tables.ice_rooms.find((row) => row.id === r1)!.team_number = null;
+    expect((await publicGET(request("/public"), params())).status).toBe(404);
+  });
+  it("조 1~15 범위를 벗어난 데이터는 공개 조회와 등록에서 제외한다", async () => {
+    tables.ice_rooms.find((row) => row.id === r1)!.team_number = 16;
+    expect((await (await teamsGET(request("/api/teams"))).json()).teams).toHaveLength(1);
+    expect((await publicGET(request("/public"), params())).status).toBe(404);
+    expect((await profilePOST(request("/profiles", {}, profileInput), params())).status).toBe(404);
+  });
+  it.each([0, 16])("공개 범위 밖 %i조 카드 쿠키는 현재 행사 등록을 막지 않는다", async (number) => {
+    tables.ice_rooms.find((row) => row.id === r1)!.team_number = number;
+    const response = await profilePOST(request("/profiles", { [cookieName("profile", r1)]: profileToken }, profileInput), params(r2));
+    expect(response.status).toBe(200);
+  });
+  it("조 페이지도 초대 없이 열람되며 팀장 권한은 생기지 않는다", async () => {
+    const response = await roomGET(request("/room"), params());
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.profileCount).toBe(2); expect(data.myProfileId).toBeNull(); expect(data.isHost).toBe(false); expect(data.generatedAt).toBe(oldTime);
+    expect((await roomGET(request("/room"), params(r3))).status).toBe(404);
+    const host = await (await roomGET(request("/room", { [cookieName("host", r1)]: hostToken }), params())).json();
+    expect(host.isHost).toBe(true);
+  });
+  it("서버 행사 설정이 없으면 쿠키를 행사 설정으로 대신 쓰지 않는다", async () => {
+    vi.stubEnv("HUDDLING_EVENT_TOKEN", "");
+    const cookies = { ice_event: eventToken, [cookieName("room", r1)]: eventToken };
+    expect((await teamsGET(request("/api/teams", cookies))).status).toBe(503);
+    expect((await eventGET(request("/api/events/current", cookies))).status).toBe(503);
+    expect((await publicGET(request("/public", cookies), params())).status).toBe(503);
+    expect((await profilePOST(request("/profiles", cookies, profileInput), params())).status).toBe(503);
+  });
+  it("팀장 선점과 프로필 등록 후 역할·관심 분야가 함께 반환된다", async () => {
+    const makeRequest = () => request("/api/host-claim", {}, { id: r2, ...profileInput });
+    const first = await hostPOST(makeRequest());
+    expect(first.status).toBe(200);
+    const host = first.cookies.get(cookieName("host", r2))!.value;
+    const member = first.cookies.get(cookieName("profile", r2))!.value;
+    expect(host).toBeTruthy(); expect(member).toBeTruthy();
+    const data = await (await roomGET(request("/room", { [cookieName("host", r2)]: host, [cookieName("profile", r2)]: member }), params(r2))).json();
+    expect(data.isHost).toBe(true); expect(data.myDomains).toEqual(["AI"]);
+    expect(data.profiles).toHaveLength(1); expect(data.profiles[0].isHost).toBe(true);
+    expect(tables.ice_rooms.find((row) => row.id === r2)!.host_profile_id).toBe(data.myProfileId);
+    expect((await hostPOST(makeRequest())).status).toBe(409);
+    expect(tables.ice_profiles.filter((row) => row.room_id === r2)).toHaveLength(1);
+  });
+  it("팀장 선점 실패와 불완전 입력은 프로필을 만들지 않는다", async () => {
+    const count = tables.ice_profiles.length;
+    expect((await hostPOST(request("/api/host-claim", {}, { id: r1, ...profileInput }))).status).toBe(409);
+    expect((await hostPOST(request("/api/host-claim", {}, { id: r2, name: "이름만" }))).status).toBe(400);
+    expect(tables.ice_profiles).toHaveLength(count);
+    const publicData = await (await roomGET(request("/room"), params())).json();
+    expect(publicData.myDomains).toEqual([]);
+    expect(publicData.profiles.find((profile: { id: string }) => profile.id === "mine").isHost).toBe(true);
+    expect(publicData.profiles.find((profile: { id: string }) => profile.id === "later").isHost).toBe(false);
+  });
+
 });
