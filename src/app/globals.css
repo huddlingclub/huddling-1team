@@ -472,3 +472,6 @@ button:not(:disabled):active, .button:active, .v3-team-card:active, .select-tile
 .person-card.is-leader { border-color: var(--color-primary) !important; box-shadow: 0 6px 18px rgba(31, 111, 229, .12); }
 @keyframes flag-wave { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-8deg) scale(1.05); } 60% { transform: rotate(5deg); } }
 @media (prefers-reduced-motion: reduce) { .leader-flag, .leader-badge { animation: none !important; } }
+.v3-team-card .leader-flag { width: 30px; height: 30px; vertical-align: -9px; }
+.v3-team-card .team-status.has-host { font-size: 13px; font-weight: 800; }
+.role-tag .leader-flag { width: 26px; height: 26px; margin: -6px 2px -6px -4px; }
