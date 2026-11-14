@@ -1,0 +1,31 @@
+# 실제 환경변수: 모든 하위 폴더에 적용. 빈 샘플만 추적한다.
+.env
+.env.*
+!.env.sample
+
+# 의존성과 빌드 산출물 (lockfile은 추적)
+node_modules/
+.next/
+.nuxt/
+.output/
+dist/
+build/
+out/
+coverage/
+.vercel/
+
+# 로그와 OS 임시 파일
+*.log
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# 개인 인증 자료와 에이전트 로컬 설정
+*.pem
+*.key
+*.p12
+*.pfx
+service-account*.json
+credentials.json
+.claude/settings.local.json
