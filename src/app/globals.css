@@ -475,3 +475,14 @@ button:not(:disabled):active, .button:active, .v3-team-card:active, .select-tile
 .v3-team-card .leader-flag { width: 30px; height: 30px; vertical-align: -9px; }
 .v3-team-card .team-status.has-host { font-size: 13px; font-weight: 800; }
 .role-tag .leader-flag { width: 26px; height: 26px; margin: -6px 2px -6px -4px; }
+
+/* 팀 페이지 연출 (11/14 발표 다듬기) */
+.welcome-banner { display: flex; flex-direction: column; gap: 4px; margin: 0 0 var(--space-16); padding: var(--space-16) var(--space-20); border-radius: var(--radius-md); background: linear-gradient(135deg, var(--color-primary-subtle), #fff4d6); text-align: center; }
+.welcome-banner strong { font-size: 18px; color: var(--color-primary); }
+.welcome-banner span { font-size: 13px; color: var(--color-text-secondary); }
+.pulse-cta { animation: cta-pulse 1.6s ease-in-out infinite; }
+@keyframes cta-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(31, 111, 229, .35); } 50% { box-shadow: 0 0 0 10px rgba(31, 111, 229, 0); transform: scale(1.02); } }
+.shared-badge { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #fff1c2; color: #8a5a00; font-size: 11px; font-weight: 700; vertical-align: 2px; animation: chip-spring .4s var(--ease-spring); }
+.shared-count { color: var(--color-primary); }
+.person-card.is-me { background: var(--color-primary-subtle) !important; }
+@media (prefers-reduced-motion: reduce) { .pulse-cta, .shared-badge { animation: none !important; } }

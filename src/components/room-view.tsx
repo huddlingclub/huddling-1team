@@ -31,6 +31,7 @@ export default function RoomView({ id }: { id: string }) {
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [leader, setLeader] = useState<LeaderData | null>(null);
   const [filters, setFilters] = useState<string[]>([]);
+  const [burst, setBurst] = useState(0);
   const cardRefs = useRef(new Map<string, HTMLElement>());
   const lastRects = useRef(new Map<string, DOMRect>());
   const orderKey = data ? filters.join(",") + "|" + data.profiles.map((p) => p.id).join(",") : "";
@@ -101,6 +102,7 @@ export default function RoomView({ id }: { id: string }) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
       await load();
+      setBurst((n) => n + 1); setHostJustEntered(false);
     } catch (e) { setError(e instanceof Error ? e.message : "다시 시도해 주세요."); }
     finally { setBusy(false); }
   }
@@ -115,14 +117,15 @@ export default function RoomView({ id }: { id: string }) {
     .sort((a, b) => sharedCount(b.profile) - sharedCount(a.profile) || a.index - b.index);
   return <main className="container room-page">
     <Particles />
+    {burst > 0 && <Particles key={burst} count={36} />}
     <PageHeader back={<Link className="back-link" href="/" aria-label="전체 조 보기">‹</Link>} title={room.name}
       sub={<>팀원 {profiles.length}명 · {questions.length ? "공통 주제 준비됨" : "주제 생성 전"} · <span className={`role-tag ${isHost ? "role-host" : "role-member"}`}>{isHost && <LeaderFlag />}{isHost ? "팀장 화면" : "팀원 화면"}</span></>} />
-    {hostJustEntered && isHost && <p role="status" className="status" style={{ textAlign: "center" }}>{room.name} 팀장으로 접속했어요.</p>}
+    {hostJustEntered && isHost && <div role="status" className="welcome-banner rise"><strong>🎉 {room.name} 팀장이 되었어요!</strong><span>아래 버튼으로 팀원 프로필 기반 공통 주제를 만들어 보세요.</span></div>}
     <div className="room-layout"><div className="stack">
     {isHost && <section className="panel leader-card rise"><div className="leader-card-head"><span className="role-tag role-host"><LeaderFlag />팀장</span><span className="status">팀장에게만 보여요</span></div>
       <h2>이 팀원 프로필로 공통 주제를 생성할까요?</h2>
       {(busy || room.phase === "generating") ? <Generating />
-        : <button disabled={profiles.length === 0} onClick={generate}>{questions.length ? "공통 주제 다시 생성하기" : "공통 주제 생성하기"}</button>}
+        : <button className={hostJustEntered && !questions.length ? "pulse-cta" : ""} disabled={profiles.length === 0} onClick={generate}>{questions.length ? "공통 주제 다시 생성하기" : "공통 주제 생성하기"}</button>}
       {error && <p className="error" role="alert">{error}</p>}
     </section>}
     {(isHost || questions.length > 0) && <section className="panel rise" style={{ ["--i" as string]: 1 }}><div className="topics-head"><h2>📌 공통 주제</h2></div>
@@ -131,16 +134,16 @@ export default function RoomView({ id }: { id: string }) {
       {!isHost && error && <p className="error" role="alert">{error}</p>}
     </section>}
     </div>
-    <section className="panel rise" style={{ ["--i" as string]: 2 }}><div className="inline" style={{ justifyContent: "space-between" }}><div className="topics-head"><h2>팀원 {profiles.length}명</h2><span className="status">등록순</span></div>
+    <section className="panel rise" style={{ ["--i" as string]: 2 }}><div className="inline" style={{ justifyContent: "space-between" }}><div className="topics-head"><h2>팀원 {profiles.length}명</h2><span className="status">{myDomains.length ? "관심사 겹치는 순" : "등록순"}</span></div>
       {!myProfileId && (isHost ? <button className="secondary" onClick={() => setShowProfileForm(!showProfileForm)}>내 프로필 등록</button> : <Link className="button secondary" href={`/room/${id}/join`}>내 프로필 작성</Link>)}</div>
       {isHost && !myProfileId && showProfileForm && <JoinForm id={id} onComplete={() => { setShowProfileForm(false); void load(); }} />}
-      <p className="status">나와 관심 분야가 같은 사람 {sharedPeople}명</p>
+      {myProfileId && <p className="status">{sharedPeople ? <>나와 관심 분야가 겹치는 팀원 <strong className="shared-count">{sharedPeople}명</strong> · 위에 먼저 보여요</> : "아직 관심 분야가 겹치는 팀원이 없어요"}</p>}
       {domains.length > 0 && <div className="chips v3-filters" aria-label="관심 분야 필터"><button type="button" className={`filter-chip ${filters.length === 0 ? "selected" : ""}`} aria-pressed={filters.length === 0} onClick={() => setFilters([])}>전체</button>
         {domains.map((domain) => <button type="button" key={domain} className={`filter-chip ${filters.includes(domain) ? "selected" : ""}`} aria-pressed={filters.includes(domain)} onClick={() => setFilters((current) => current.includes(domain) ? current.filter((item) => item !== domain) : [...current, domain])}>{domain}</button>)}</div>}
-      {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : shownProfiles.length === 0 ? <p className="muted">선택한 분야의 팀원이 없어요.</p> : <div className="profiles">{shownProfiles.map(({ profile }) => <article className={`profile person-card${profile.isHost ? " is-leader" : ""}`} key={profile.id} ref={(el) => { if (el) cardRefs.current.set(profile.id, el); else cardRefs.current.delete(profile.id); }}>
+      {profiles.length === 0 ? <p className="muted">아직 등록된 프로필이 없어요.</p> : shownProfiles.length === 0 ? <p className="muted">선택한 분야의 팀원이 없어요.</p> : <div className="profiles">{shownProfiles.map(({ profile }) => <article className={`profile person-card${profile.isHost ? " is-leader" : ""}${profile.id === myProfileId ? " is-me" : ""}`} key={profile.id} ref={(el) => { if (el) cardRefs.current.set(profile.id, el); else cardRefs.current.delete(profile.id); }}>
         <div className="avatar-wrap"><div className="character-avatar" aria-hidden="true">{occupationChar(profile.occupation) ? <img className="char-float" src={occupationChar(profile.occupation)!} alt="" decoding="async" /> : <span>{profile.occupation.slice(0, 1)}</span>}</div>{profile.isHost && <img className="leader-badge" src="/mallang/leader-flag.png" alt="팀장" />}</div>
         <div className="person-details">
-        <h3>{profile.name} <span className={`role-tag ${profile.isHost ? "role-host" : "role-member"}`}>{profile.isHost && <LeaderFlag />}{profile.isHost ? "팀장" : "팀원"}</span> {profile.id === myProfileId && <span className="tag">나</span>}</h3>
+        <h3>{profile.name} <span className={`role-tag ${profile.isHost ? "role-host" : "role-member"}`}>{profile.isHost && <LeaderFlag />}{profile.isHost ? "팀장" : "팀원"}</span> {profile.id === myProfileId && <span className="tag">나</span>}{profile.id !== myProfileId && sharedCount(profile) > 0 && <span className="shared-badge">관심사 {sharedCount(profile)}개 겹쳐요</span>}</h3>
         <div className="status">{profile.occupation} · {profile.experience}</div><p>{profile.introduction}</p>
         <div>{profile.domains.map((tag) => <span className={`tag ${myDomains.includes(tag) && profile.id !== myProfileId ? "shared-domain" : ""}`} key={tag}>{tag}</span>)}</div>
         {profile.socialUrl && <p><a href={profile.socialUrl} target="_blank" rel="noopener noreferrer">SNS 보기 ↗</a></p>}
