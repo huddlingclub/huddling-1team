@@ -17,7 +17,7 @@ export default function TeamsHome({ adminLogin }: { adminLogin: ReactNode }) {
     }).catch(() => {});
   }, []);
   return <main className="container narrow v3-home">
-    <PageHeader title="조를 선택하세요" sub={<>{eventName ? `${eventName} · ` : ""}카드를 누르면 그 조 페이지로 들어가요</>} />
+    <PageHeader title={<>처음 만나서 어색한 우리,<br />말랑하게 알아가볼까요?</>} sub="카드를 누르면 그 조 페이지로 들어가요" />
     <div className="rise"><CharacterStage bubble="오늘은 누구랑 이야기할까?" /></div>
     <section className="team-sheet rise" style={{ ["--i" as string]: 1 }} aria-label="1~15조">
       <div className="v3-team-grid">{teams.map((team, index) => <Link className={`v3-team-card rise team-color-${(team.number - 1) % 5}`} style={{ ["--i" as string]: index + 2 }} href={`/room/${team.id}/start`} key={team.id}>
